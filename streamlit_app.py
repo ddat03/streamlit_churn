@@ -59,38 +59,6 @@ def cargar_dataset():
     
     except FileNotFoundError:
         st.error("❌ No se encontró el archivo CSV")
-        # Crear datos de ejemplo si no encuentra el archivo
-        st.warning("⚠️ Creando datos de ejemplo...")
-        
-        # Crear 500 filas de datos simulados
-        n_filas = 500
-        np.random.seed(42)  # Para que siempre sean los mismos datos
-        
-        df_ejemplo = pd.DataFrame({
-            'customerID': [f'ID_{i}' for i in range(n_filas)],
-            'gender': np.random.choice(['Male', 'Female'], n_filas),
-            'SeniorCitizen': np.random.choice([0, 1], n_filas),
-            'Partner': np.random.choice(['Yes', 'No'], n_filas),
-            'Dependents': np.random.choice(['Yes', 'No'], n_filas),
-            'tenure': np.random.randint(1, 73, n_filas),
-            'PhoneService': np.random.choice(['Yes', 'No'], n_filas),
-            'MultipleLines': np.random.choice(['Yes', 'No'], n_filas),
-            'InternetService': np.random.choice(['DSL', 'Fiber optic', 'No'], n_filas),
-            'OnlineSecurity': np.random.choice(['Yes', 'No'], n_filas),
-            'OnlineBackup': np.random.choice(['Yes', 'No'], n_filas),
-            'DeviceProtection': np.random.choice(['Yes', 'No'], n_filas),
-            'TechSupport': np.random.choice(['Yes', 'No'], n_filas),
-            'StreamingTV': np.random.choice(['Yes', 'No'], n_filas),
-            'StreamingMovies': np.random.choice(['Yes', 'No'], n_filas),
-            'Contract': np.random.choice(['Month-to-month', 'One year', 'Two year'], n_filas),
-            'PaperlessBilling': np.random.choice(['Yes', 'No'], n_filas),
-            'PaymentMethod': np.random.choice(['Electronic check', 'Mailed check'], n_filas),
-            'MonthlyCharges': np.random.uniform(20, 120, n_filas),
-            'TotalCharges': np.random.uniform(20, 8000, n_filas),
-            'Churn': np.random.choice(['Yes', 'No'], n_filas)
-        })
-        
-        return df_ejemplo
 
 # ============================================================================
 # FUNCIÓN PARA LIMPIAR LOS DATOS
@@ -165,15 +133,6 @@ def cargar_modelos():
         except FileNotFoundError:
             errores.append(f"❌ No se encontró: {archivo}")
     
-    # Mostrar errores si los hay
-    if errores:
-        st.warning("Algunos modelos no se pudieron cargar:")
-        for error in errores:
-            st.write(error)
-    
-
-
-
 
 def obtener_peso_modelo(modelo, nombre_archivo):
     """
@@ -321,10 +280,6 @@ with st.spinner("Limpiando datos..."):
 # Cargar los modelos
 with st.spinner("Cargando modelos de machine learning..."):
     modelos_disponibles = cargar_modelos()
-
-# Mostrar estado de carga
-if len(modelos_disponibles) > 0:
-    st.success(f"✅ Todo listo: {len(modelos_disponibles)} modelos cargados, {len(dataset_original) if dataset_original is not None else 0} filas de datos procesadas")
 
 # ============================================================================
 # PESTAÑAS PRINCIPALES
