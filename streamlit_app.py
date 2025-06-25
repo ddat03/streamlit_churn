@@ -268,8 +268,6 @@ with st.spinner("Cargando modelos de machine learning..."):
 # Mostrar estado de carga
 if len(modelos_disponibles) > 0:
     st.success(f"✅ Todo listo: {len(modelos_disponibles)} modelos cargados, {len(dataset_original) if dataset_original is not None else 0} filas de datos procesadas")
-else:
-    st.warning("⚠️ Algunos modelos no se pudieron cargar. Se usarán modelos de ejemplo.")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🔮 Predicción", 
