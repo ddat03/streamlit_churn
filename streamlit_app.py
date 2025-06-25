@@ -171,37 +171,9 @@ def cargar_modelos():
         for error in errores:
             st.write(error)
     
-    # Si no se cargó ningún modelo, crear modelos de ejemplo
-    if len(modelos) == 0:
-        st.error("No se cargaron modelos reales. Creando modelos de ejemplo...")
-        modelos = crear_modelos_ejemplo()
-    
-    return modelos
 
-# ============================================================================
-# FUNCIÓN PARA CREAR MODELOS DE EJEMPLO (SI NO EXISTEN LOS REALES)
-# ============================================================================
 
-def crear_modelos_ejemplo():
-    """
-    Crear modelos de ejemplo si no se pueden cargar los reales
-    """
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.linear_model import LogisticRegression
-    
-    modelos_ejemplo = {}
-    
-    # Crear modelos simples de ejemplo
-    modelos_ejemplo['Ejemplo Random Forest'] = RandomForestClassifier(n_estimators=10, random_state=42)
-    modelos_ejemplo['Ejemplo Logistic Regression'] = LogisticRegression(random_state=42)
-    
-    st.info("🔧 Usando modelos de ejemplo para demostración")
-    
-    return modelos_ejemplo
 
-# ============================================================================
-# FUNCIÓN PARA OBTENER EL PESO DE UN MODELO
-# ============================================================================
 
 def obtener_peso_modelo(modelo, nombre_archivo):
     """
