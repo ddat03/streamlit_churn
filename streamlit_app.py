@@ -734,10 +734,14 @@ with tab4:
         
         # Gráfico de barras para comparar accuracy
         if len(datos_comparacion) > 1:
-            fig_comp = px.bar(df_comparacion, x='Modelo', y='Accuracy', 
-                             title="Comparación de Accuracy por Modelo",
+            # Convertir accuracy de string a número para el gráfico
+            df_comp_graf = df_comparacion.copy()
+            df_comp_graf['Accuracy_num'] = df_comp_graf['Accuracy'].str.replace('%', '').astype(float)
+            
+            fig_comp = px.bar(df_comp_graf, x='Modelo', y='Accuracy_num', 
+                             title="Comparación de Accuracy por Modelo (%)",
                              color='Features')
-            fig_comp.update_xaxis(tickangle=45)
+            fig_comp.update_layout(xaxis_tickangle=45)  # Corregido: usar update_layout
             st.plotly_chart(fig_comp, use_container_width=True)
 
 # ============================================================================
