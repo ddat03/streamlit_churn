@@ -48,17 +48,12 @@ FEATURES_TOP_7 = [
 
 @st.cache_data  # Esto hace que Streamlit guarde los datos en memoria
 def cargar_dataset():
-    """
-    Función simple para cargar el archivo CSV
-    """
-    try:
-        # Intentar cargar el archivo real
-        df = pd.read_csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
+  
+  df = pd.read_csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
         st.success("✅ Dataset cargado correctamente")
-        return df
     
-    except FileNotFoundError:
-        st.error("❌ No se encontró el archivo CSV")
+    return df
+
 
 # ============================================================================
 # FUNCIÓN PARA LIMPIAR LOS DATOS
