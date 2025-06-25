@@ -15,37 +15,14 @@ warnings.filterwarnings('ignore')
 # ============================================================================
 
 st.set_page_config(
-    page_title="🔮 Predictor de Churn",
-    page_icon="🔮",
+    page_title="Predictor de Churn",
     layout="wide"
 )
 
 # Título principal
-st.title("🔮 Predictor de Churn de Clientes Telco")
-st.markdown("### Aplicación Simple de Machine Learning")
+st.title("Predictor de Churn de Clientes Telco")
+st.markdown("### Evaluacion Final Aprendizaje de maquina")
 
-# Guía rápida (reemplaza el sidebar)
-with st.expander("📖 Guía Rápida - ¿Cómo usar esta aplicación?"):
-    st.markdown("""
-    **🔮 Predicción:** Selecciona un modelo y tipo de características, luego introduce datos de un cliente para obtener una predicción
-    
-    **📊 EDA Simple:** Explora los datos originales con gráficos básicos
-    
-    **🧹 Datos Limpios:** Ve cómo se procesaron y limpiaron los datos
-    
-    **📈 Métricas y Rendimiento:** Compara peso, tiempo de ejecución y precisión de los modelos
-    
-    **💡 Dashboard:** Resumen ejecutivo con insights de negocio
-    
-    ---
-    
-    **💡 Consejos:**
-    - Los modelos de "7 características" son más rápidos pero menos precisos
-    - Los modelos de "todas las características" son más precisos pero más lentos
-    - Prueba diferentes combinaciones de modelo y características para comparar resultados
-    """)
-
-st.markdown("---")
 
 # ============================================================================
 # LISTA DE CARACTERÍSTICAS (FEATURES)
