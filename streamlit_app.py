@@ -15,13 +15,37 @@ warnings.filterwarnings('ignore')
 # ============================================================================
 
 st.set_page_config(
-    page_title="Predictor de Churn",
+    page_title="🔮 Predictor de Churn",
+    page_icon="🔮",
     layout="wide"
 )
 
 # Título principal
-st.title("Predictor de Churn de Clientes Telco")
-st.markdown("### Evaluacion Final Aprendizaje de maquina")
+st.title("🔮 Predictor de Churn de Clientes Telco")
+st.markdown("### Aplicación Simple de Machine Learning")
+
+# Guía rápida (reemplaza el sidebar)
+with st.expander("📖 Guía Rápida - ¿Cómo usar esta aplicación?"):
+    st.markdown("""
+    **🔮 Predicción:** Selecciona un modelo y tipo de características, luego introduce datos de un cliente para obtener una predicción
+    
+    **📊 EDA Simple:** Explora los datos originales con gráficos básicos
+    
+    **🧹 Datos Limpios:** Ve cómo se procesaron y limpiaron los datos
+    
+    **📈 Métricas y Rendimiento:** Compara peso, tiempo de ejecución y precisión de los modelos
+    
+    **💡 Dashboard:** Resumen ejecutivo con insights de negocio
+    
+    ---
+    
+    **💡 Consejos:**
+    - Los modelos de "7 características" son más rápidos pero menos precisos
+    - Los modelos de "todas las características" son más precisos pero más lentos
+    - Prueba diferentes combinaciones de modelo y características para comparar resultados
+    """)
+
+st.markdown("---")
 
 # ============================================================================
 # LISTA DE CARACTERÍSTICAS (FEATURES)
@@ -58,8 +82,42 @@ def cargar_dataset():
     
     except FileNotFoundError:
         st.error("❌ No se encontró el archivo CSV")
+        # Crear datos de ejemplo si no encuentra el archivo
+        st.warning("⚠️ Creando datos de ejemplo...")
         
+        # Crear 500 filas de datos simulados
+        n_filas = 500
+        np.random.seed(42)  # Para que siempre sean los mismos datos
+        
+        df_ejemplo = pd.DataFrame({
+            'customerID': [f'ID_{i}' for i in range(n_filas)],
+            'gender': np.random.choice(['Male', 'Female'], n_filas),
+            'SeniorCitizen': np.random.choice([0, 1], n_filas),
+            'Partner': np.random.choice(['Yes', 'No'], n_filas),
+            'Dependents': np.random.choice(['Yes', 'No'], n_filas),
+            'tenure': np.random.randint(1, 73, n_filas),
+            'PhoneService': np.random.choice(['Yes', 'No'], n_filas),
+            'MultipleLines': np.random.choice(['Yes', 'No'], n_filas),
+            'InternetService': np.random.choice(['DSL', 'Fiber optic', 'No'], n_filas),
+            'OnlineSecurity': np.random.choice(['Yes', 'No'], n_filas),
+            'OnlineBackup': np.random.choice(['Yes', 'No'], n_filas),
+            'DeviceProtection': np.random.choice(['Yes', 'No'], n_filas),
+            'TechSupport': np.random.choice(['Yes', 'No'], n_filas),
+            'StreamingTV': np.random.choice(['Yes', 'No'], n_filas),
+            'StreamingMovies': np.random.choice(['Yes', 'No'], n_filas),
+            'Contract': np.random.choice(['Month-to-month', 'One year', 'Two year'], n_filas),
+            'PaperlessBilling': np.random.choice(['Yes', 'No'], n_filas),
+            'PaymentMethod': np.random.choice(['Electronic check', 'Mailed check'], n_filas),
+            'MonthlyCharges': np.random.uniform(20, 120, n_filas),
+            'TotalCharges': np.random.uniform(20, 8000, n_filas),
+            'Churn': np.random.choice(['Yes', 'No'], n_filas)
+        })
+        
+        return df_ejemplo
 
+# ============================================================================
+# FUNCIÓN PARA LIMPIAR LOS DATOS
+# ============================================================================
 
 def limpiar_datos(df_original):
     """
@@ -96,8 +154,11 @@ def limpiar_datos(df_original):
     
     return X, y
 
+# ============================================================================
+# FUNCIÓN PARA CARGAR LOS MODELOS
+# ============================================================================
 
-@st.cache_resource  
+@st.cache_resource  # Esto hace que Streamlit guarde los modelos en memoria
 def cargar_modelos():
     """
     Función para cargar todos los modelos (completos y de 7 features)
@@ -105,6 +166,7 @@ def cargar_modelos():
     modelos = {}
     errores = []
     
+    # Lista de archivos de modelos que deberíamos tener
     archivos_modelos = {
         # Modelos completos (19 features)
         'Stacking Diverse (Completo)': 'stacking_diverse_trained.pkl',
@@ -117,6 +179,7 @@ def cargar_modelos():
         'Voting Classifier (7 Features)': 'Voting Classifier (Soft)_trained_7.pkl'
     }
     
+    # Intentar cargar cada modelo
     for nombre_modelo, archivo in archivos_modelos.items():
         try:
             modelo = joblib.load(archivo)
@@ -125,11 +188,43 @@ def cargar_modelos():
         except FileNotFoundError:
             errores.append(f"❌ No se encontró: {archivo}")
     
+    # Mostrar errores si los hay
     if errores:
         st.warning("Algunos modelos no se pudieron cargar:")
         for error in errores:
             st.write(error)
     
+    # Si no se cargó ningún modelo, crear modelos de ejemplo
+    if len(modelos) == 0:
+        st.error("No se cargaron modelos reales. Creando modelos de ejemplo...")
+        modelos = crear_modelos_ejemplo()
+    
+    return modelos
+
+# ============================================================================
+# FUNCIÓN PARA CREAR MODELOS DE EJEMPLO (SI NO EXISTEN LOS REALES)
+# ============================================================================
+
+def crear_modelos_ejemplo():
+    """
+    Crear modelos de ejemplo si no se pueden cargar los reales
+    """
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.linear_model import LogisticRegression
+    
+    modelos_ejemplo = {}
+    
+    # Crear modelos simples de ejemplo
+    modelos_ejemplo['Ejemplo Random Forest'] = RandomForestClassifier(n_estimators=10, random_state=42)
+    modelos_ejemplo['Ejemplo Logistic Regression'] = LogisticRegression(random_state=42)
+    
+    st.info("🔧 Usando modelos de ejemplo para demostración")
+    
+    return modelos_ejemplo
+
+# ============================================================================
+# FUNCIÓN PARA OBTENER EL PESO DE UN MODELO
+# ============================================================================
 
 def obtener_peso_modelo(modelo, nombre_archivo):
     """
@@ -146,6 +241,9 @@ def obtener_peso_modelo(modelo, nombre_archivo):
     except:
         return 0.0
 
+# ============================================================================
+# FUNCIÓN PARA MEDIR TIEMPO DE PREDICCIÓN
+# ============================================================================
 
 def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
     """
@@ -168,6 +266,9 @@ def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
     except:
         return 0.0
 
+# ============================================================================
+# FUNCIÓN PARA PROCESAR DATOS DEL CLIENTE
+# ============================================================================
 
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     """
@@ -175,6 +276,7 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     que el modelo pueda entender
     """
     if usar_7_features:
+        # Solo usar las 7 características más importantes
         datos_procesados = []
         
         # 1. TotalCharges (número)
@@ -205,7 +307,9 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         return np.array(datos_procesados).reshape(1, -1)
     
     else:
-    
+        # Usar todas las 19 características (versión simplificada)
+        # En una versión real, tendrías que procesar todas las características
+        # Por simplicidad, usamos solo algunas importantes
         datos_procesados = []
         
         # Características numéricas
@@ -253,12 +357,16 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         
         return np.array(datos_procesados).reshape(1, -1)
 
+# ============================================================================
+# CARGAR DATOS Y MODELOS AL INICIO
+# ============================================================================
+
 # Cargar el dataset
-with st.spinner("Cargando dataset"):
+with st.spinner("Cargando dataset..."):
     dataset_original = cargar_dataset()
 
 # Limpiar los datos
-with st.spinner("Limpiando datos"):
+with st.spinner("Limpiando datos..."):
     X_limpio, y_limpio = limpiar_datos(dataset_original)
 
 # Cargar los modelos
@@ -268,6 +376,12 @@ with st.spinner("Cargando modelos de machine learning..."):
 # Mostrar estado de carga
 if len(modelos_disponibles) > 0:
     st.success(f"✅ Todo listo: {len(modelos_disponibles)} modelos cargados, {len(dataset_original) if dataset_original is not None else 0} filas de datos procesadas")
+else:
+    st.warning("⚠️ Algunos modelos no se pudieron cargar. Se usarán modelos de ejemplo.")
+
+# ============================================================================
+# PESTAÑAS PRINCIPALES
+# ============================================================================
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🔮 Predicción", 
