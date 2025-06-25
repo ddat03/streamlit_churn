@@ -47,36 +47,6 @@ def cargar_dataset():
         st.success("✅ Dataset cargado correctamente")
         return df
     
-    except FileNotFoundError:
-        st.error("No se encontró el archivo CSV")
-                n_filas = 500
-        np.random.seed(42) 
-        
-        df_ejemplo = pd.DataFrame({
-            'customerID': [f'ID_{i}' for i in range(n_filas)],
-            'gender': np.random.choice(['Male', 'Female'], n_filas),
-            'SeniorCitizen': np.random.choice([0, 1], n_filas),
-            'Partner': np.random.choice(['Yes', 'No'], n_filas),
-            'Dependents': np.random.choice(['Yes', 'No'], n_filas),
-            'tenure': np.random.randint(1, 73, n_filas),
-            'PhoneService': np.random.choice(['Yes', 'No'], n_filas),
-            'MultipleLines': np.random.choice(['Yes', 'No'], n_filas),
-            'InternetService': np.random.choice(['DSL', 'Fiber optic', 'No'], n_filas),
-            'OnlineSecurity': np.random.choice(['Yes', 'No'], n_filas),
-            'OnlineBackup': np.random.choice(['Yes', 'No'], n_filas),
-            'DeviceProtection': np.random.choice(['Yes', 'No'], n_filas),
-            'TechSupport': np.random.choice(['Yes', 'No'], n_filas),
-            'StreamingTV': np.random.choice(['Yes', 'No'], n_filas),
-            'StreamingMovies': np.random.choice(['Yes', 'No'], n_filas),
-            'Contract': np.random.choice(['Month-to-month', 'One year', 'Two year'], n_filas),
-            'PaperlessBilling': np.random.choice(['Yes', 'No'], n_filas),
-            'PaymentMethod': np.random.choice(['Electronic check', 'Mailed check'], n_filas),
-            'MonthlyCharges': np.random.uniform(20, 120, n_filas),
-            'TotalCharges': np.random.uniform(20, 8000, n_filas),
-            'Churn': np.random.choice(['Yes', 'No'], n_filas)
-        })
-        
-        return df_ejemplo
 
 def limpiar_datos(df_original):
     """
