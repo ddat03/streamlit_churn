@@ -47,6 +47,8 @@ def cargar_dataset():
         st.success("✅ Dataset cargado correctamente")
         return df
     
+    except FileNotFoundError:
+        st.error("❌ No se encontró el archivo CSV")
 
 def limpiar_datos(df_original):
     """
