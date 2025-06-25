@@ -19,13 +19,8 @@ st.set_page_config(
     layout="wide"
 )
 
-# Título principal
-st.title("🔮 Predictor de Churn de Clientes Telco")
-st.markdown("### Aplicación Simple de Machine Learning")
-
-# ============================================================================
-# LISTA DE CARACTERÍSTICAS (FEATURES)
-# ============================================================================
+st.title("Predictor de Churn de Clientes Telco")
+st.markdown("### Evaluacion Final Aprendizaje de Maquina")
 
 # Las 19 características completas
 FEATURES_COMPLETAS = [
@@ -41,29 +36,21 @@ FEATURES_TOP_7 = [
     'PaymentMethod', 'Contract', 'gender'
 ]
 
-# ============================================================================
-# FUNCIÓN PARA CARGAR EL DATASET
-# ============================================================================
 
-@st.cache_data  # Esto hace que Streamlit guarde los datos en memoria
+@st.cache_data 
 def cargar_dataset():
     """
     Función simple para cargar el archivo CSV
     """
     try:
-        # Intentar cargar el archivo real
         df = pd.read_csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
         st.success("✅ Dataset cargado correctamente")
         return df
     
     except FileNotFoundError:
-        st.error("❌ No se encontró el archivo CSV")
-        # Crear datos de ejemplo si no encuentra el archivo
-        st.warning("⚠️ Creando datos de ejemplo...")
-        
-        # Crear 500 filas de datos simulados
-        n_filas = 500
-        np.random.seed(42)  # Para que siempre sean los mismos datos
+        st.error("No se encontró el archivo CSV")
+                n_filas = 500
+        np.random.seed(42) 
         
         df_ejemplo = pd.DataFrame({
             'customerID': [f'ID_{i}' for i in range(n_filas)],
@@ -91,15 +78,10 @@ def cargar_dataset():
         
         return df_ejemplo
 
-# ============================================================================
-# FUNCIÓN PARA LIMPIAR LOS DATOS
-# ============================================================================
-
 def limpiar_datos(df_original):
     """
     Función simple para limpiar los datos como me dijiste
     """
-    # Hacer una copia para no modificar el original
     df = df_original.copy()
     
     # 1. Eliminar customerID si existe
@@ -130,11 +112,7 @@ def limpiar_datos(df_original):
     
     return X, y
 
-# ============================================================================
-# FUNCIÓN PARA CARGAR LOS MODELOS
-# ============================================================================
-
-@st.cache_resource  # Esto hace que Streamlit guarde los modelos en memoria
+@st.cache_resource 
 def cargar_modelos():
     """
     Función para cargar todos los modelos (completos y de 7 features)
@@ -142,20 +120,16 @@ def cargar_modelos():
     modelos = {}
     errores = []
     
-    # Lista de archivos de modelos que deberíamos tener
     archivos_modelos = {
-        # Modelos completos (19 features)
         'Stacking Diverse (Completo)': 'stacking_diverse_trained.pkl',
         'Logistic Regression (Completo)': 'Single Classifier (Logistic Regression)_trained.pkl',
         'Voting Classifier (Completo)': 'Voting Classifier (Soft)_trained.pkl',
         
-        # Modelos de 7 features
         'Stacking Diverse (7 Features)': 'stacking_diverse_trained_7.pkl',
         'Logistic Regression (7 Features)': 'Single Classifier_7.pkl',
         'Voting Classifier (7 Features)': 'Voting Classifier (Soft)_trained_7.pkl'
     }
     
-    # Intentar cargar cada modelo
     for nombre_modelo, archivo in archivos_modelos.items():
         try:
             modelo = joblib.load(archivo)
@@ -164,43 +138,18 @@ def cargar_modelos():
         except FileNotFoundError:
             errores.append(f"❌ No se encontró: {archivo}")
     
-    # Mostrar errores si los hay
     if errores:
         st.warning("Algunos modelos no se pudieron cargar:")
         for error in errores:
             st.write(error)
     
-    # Si no se cargó ningún modelo, crear modelos de ejemplo
     if len(modelos) == 0:
         st.error("No se cargaron modelos reales. Creando modelos de ejemplo...")
         modelos = crear_modelos_ejemplo()
     
     return modelos
 
-# ============================================================================
-# FUNCIÓN PARA CREAR MODELOS DE EJEMPLO (SI NO EXISTEN LOS REALES)
-# ============================================================================
 
-def crear_modelos_ejemplo():
-    """
-    Crear modelos de ejemplo si no se pueden cargar los reales
-    """
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.linear_model import LogisticRegression
-    
-    modelos_ejemplo = {}
-    
-    # Crear modelos simples de ejemplo
-    modelos_ejemplo['Ejemplo Random Forest'] = RandomForestClassifier(n_estimators=10, random_state=42)
-    modelos_ejemplo['Ejemplo Logistic Regression'] = LogisticRegression(random_state=42)
-    
-    st.info("🔧 Usando modelos de ejemplo para demostración")
-    
-    return modelos_ejemplo
-
-# ============================================================================
-# FUNCIÓN PARA OBTENER EL PESO DE UN MODELO
-# ============================================================================
 
 def obtener_peso_modelo(modelo, nombre_archivo):
     """
@@ -217,9 +166,6 @@ def obtener_peso_modelo(modelo, nombre_archivo):
     except:
         return 0.0
 
-# ============================================================================
-# FUNCIÓN PARA MEDIR TIEMPO DE PREDICCIÓN
-# ============================================================================
 
 def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
     """
@@ -242,9 +188,6 @@ def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
     except:
         return 0.0
 
-# ============================================================================
-# FUNCIÓN PARA PROCESAR DATOS DEL CLIENTE
-# ============================================================================
 
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     """
@@ -283,9 +226,7 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         return np.array(datos_procesados).reshape(1, -1)
     
     else:
-        # Usar todas las 19 características (versión simplificada)
-        # En una versión real, tendrías que procesar todas las características
-        # Por simplicidad, usamos solo algunas importantes
+       
         datos_procesados = []
         
         # Características numéricas
@@ -333,9 +274,7 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         
         return np.array(datos_procesados).reshape(1, -1)
 
-# ============================================================================
 # CARGAR DATOS Y MODELOS AL INICIO
-# ============================================================================
 
 # Cargar el dataset
 st.sidebar.header("📊 Estado de Carga")
