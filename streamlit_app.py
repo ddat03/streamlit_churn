@@ -19,8 +19,13 @@ st.set_page_config(
     layout="wide"
 )
 
+# Título principal
 st.title("Predictor de Churn de Clientes Telco")
-st.markdown("### Evaluacion Final Aprendizaje de Maquina")
+st.markdown("### Evaluacion Final Aprendizaje de maquina")
+
+# ============================================================================
+# LISTA DE CARACTERÍSTICAS (FEATURES)
+# ============================================================================
 
 # Las 19 características completas
 FEATURES_COMPLETAS = [
@@ -36,24 +41,31 @@ FEATURES_TOP_7 = [
     'PaymentMethod', 'Contract', 'gender'
 ]
 
+# ============================================================================
+# FUNCIÓN PARA CARGAR EL DATASET
+# ============================================================================
 
-@st.cache_data 
+@st.cache_data  # Esto hace que Streamlit guarde los datos en memoria
 def cargar_dataset():
     """
     Función simple para cargar el archivo CSV
     """
     try:
+        # Intentar cargar el archivo real
         df = pd.read_csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
         st.success("✅ Dataset cargado correctamente")
         return df
     
     except FileNotFoundError:
         st.error("❌ No se encontró el archivo CSV")
+        
+
 
 def limpiar_datos(df_original):
     """
     Función simple para limpiar los datos como me dijiste
     """
+    # Hacer una copia para no modificar el original
     df = df_original.copy()
     
     # 1. Eliminar customerID si existe
@@ -84,7 +96,8 @@ def limpiar_datos(df_original):
     
     return X, y
 
-@st.cache_resource 
+
+@st.cache_resource  
 def cargar_modelos():
     """
     Función para cargar todos los modelos (completos y de 7 features)
@@ -93,10 +106,12 @@ def cargar_modelos():
     errores = []
     
     archivos_modelos = {
+        # Modelos completos (19 features)
         'Stacking Diverse (Completo)': 'stacking_diverse_trained.pkl',
         'Logistic Regression (Completo)': 'Single Classifier (Logistic Regression)_trained.pkl',
         'Voting Classifier (Completo)': 'Voting Classifier (Soft)_trained.pkl',
         
+        # Modelos de 7 features
         'Stacking Diverse (7 Features)': 'stacking_diverse_trained_7.pkl',
         'Logistic Regression (7 Features)': 'Single Classifier_7.pkl',
         'Voting Classifier (7 Features)': 'Voting Classifier (Soft)_trained_7.pkl'
@@ -115,13 +130,6 @@ def cargar_modelos():
         for error in errores:
             st.write(error)
     
-    if len(modelos) == 0:
-        st.error("No se cargaron modelos reales. Creando modelos de ejemplo...")
-        modelos = crear_modelos_ejemplo()
-    
-    return modelos
-
-
 
 def obtener_peso_modelo(modelo, nombre_archivo):
     """
@@ -167,7 +175,6 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     que el modelo pueda entender
     """
     if usar_7_features:
-        # Solo usar las 7 características más importantes
         datos_procesados = []
         
         # 1. TotalCharges (número)
@@ -198,7 +205,7 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         return np.array(datos_procesados).reshape(1, -1)
     
     else:
-       
+    
         datos_procesados = []
         
         # Características numéricas
@@ -246,27 +253,23 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         
         return np.array(datos_procesados).reshape(1, -1)
 
-# CARGAR DATOS Y MODELOS AL INICIO
-
 # Cargar el dataset
-st.sidebar.header("📊 Estado de Carga")
-dataset_original = cargar_dataset()
+with st.spinner("Cargando dataset"):
+    dataset_original = cargar_dataset()
 
 # Limpiar los datos
-with st.sidebar:
-    with st.expander("🧹 Proceso de Limpieza"):
-        X_limpio, y_limpio = limpiar_datos(dataset_original)
+with st.spinner("Limpiando datos"):
+    X_limpio, y_limpio = limpiar_datos(dataset_original)
 
 # Cargar los modelos
-with st.sidebar:
-    with st.expander("🤖 Modelos Cargados"):
-        modelos_disponibles = cargar_modelos()
+with st.spinner("Cargando modelos de machine learning..."):
+    modelos_disponibles = cargar_modelos()
 
-st.sidebar.success(f"✅ {len(modelos_disponibles)} modelos cargados")
-
-# ============================================================================
-# PESTAÑAS PRINCIPALES
-# ============================================================================
+# Mostrar estado de carga
+if len(modelos_disponibles) > 0:
+    st.success(f"✅ Todo listo: {len(modelos_disponibles)} modelos cargados, {len(dataset_original) if dataset_original is not None else 0} filas de datos procesadas")
+else:
+    st.warning("⚠️ Algunos modelos no se pudieron cargar. Se usarán modelos de ejemplo.")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🔮 Predicción", 
@@ -283,78 +286,157 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 with tab1:
     st.header("🔮 Hacer una Predicción")
     
-    # Dividir en dos columnas
+    # Selectbox para configuración del modelo (ANTES del formulario)
+    st.subheader("⚙️ Configuración del Modelo")
+    
+    col_config1, col_config2 = st.columns(2)
+    
+    with col_config1:
+        # Selector de modelo
+        modelo_seleccionado = st.selectbox(
+            "🤖 Selecciona el Modelo:",
+            list(modelos_disponibles.keys()),
+            help="Elige el modelo de machine learning para hacer la predicción"
+        )
+    
+    with col_config2:
+        # Selector de tipo de features
+        tipo_features = st.selectbox(
+            "🔧 Tipo de Características:",
+            ["Todas las características (19)", "Solo las 7 más importantes"],
+            help="Elige cuántas características usar para la predicción"
+        )
+    
+    # Determinar si usar 7 features o todas
+    usar_7_features = "7 más importantes" in tipo_features
+    
+    # Mostrar información sobre la selección
+    if usar_7_features:
+        st.info("📊 **Usando 7 características principales:** TotalCharges, MonthlyCharges, tenure, InternetService, PaymentMethod, Contract, gender")
+    else:
+        st.info("📊 **Usando todas las 19 características** del dataset completo")
+    
+    st.markdown("---")  # Separador
+    
+    # Dividir en dos columnas para formulario y resultado
     col_formulario, col_resultado = st.columns([2, 1])
     
     with col_formulario:
         st.subheader("📝 Datos del Cliente")
         
-        # Formulario simple
+        # Formulario condicional basado en el tipo de features seleccionado
         with st.form("formulario_cliente"):
             
-            # Información básica
-            st.markdown("**👤 Información Personal**")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                gender = st.selectbox("Género", ["Male", "Female"])
-                SeniorCitizen = st.selectbox("¿Es Senior?", [0, 1], format_func=lambda x: "No" if x == 0 else "Sí")
-                Partner = st.selectbox("¿Tiene Pareja?", ["No", "Yes"])
-            
-            with col2:
-                Dependents = st.selectbox("¿Tiene Dependientes?", ["No", "Yes"])
-                tenure = st.number_input("Meses como Cliente", min_value=0, max_value=100, value=12)
-            
-            # Servicios
-            st.markdown("**📞 Servicios**")
-            col3, col4 = st.columns(2)
-            
-            with col3:
-                PhoneService = st.selectbox("Servicio Telefónico", ["Yes", "No"])
-                MultipleLines = st.selectbox("Múltiples Líneas", ["No", "Yes"])
-                InternetService = st.selectbox("Internet", ["DSL", "Fiber optic", "No"])
-            
-            with col4:
-                OnlineSecurity = st.selectbox("Seguridad Online", ["No", "Yes"])
-                OnlineBackup = st.selectbox("Backup Online", ["No", "Yes"])
-                DeviceProtection = st.selectbox("Protección de Dispositivos", ["No", "Yes"])
-            
-            # Más servicios
-            col5, col6 = st.columns(2)
-            
-            with col5:
-                TechSupport = st.selectbox("Soporte Técnico", ["No", "Yes"])
-                StreamingTV = st.selectbox("Streaming TV", ["No", "Yes"])
-            
-            with col6:
-                StreamingMovies = st.selectbox("Streaming Movies", ["No", "Yes"])
-            
-            # Contrato y pagos
-            st.markdown("**💳 Contrato y Pagos**")
-            col7, col8 = st.columns(2)
-            
-            with col7:
-                Contract = st.selectbox("Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
-                PaperlessBilling = st.selectbox("Facturación Sin Papel", ["Yes", "No"])
-            
-            with col8:
-                PaymentMethod = st.selectbox("Método de Pago", 
+            if usar_7_features:
+                # ============================================================
+                # FORMULARIO SIMPLIFICADO - SOLO 7 CARACTERÍSTICAS
+                # ============================================================
+                
+                st.markdown("**💡 Formulario Simplificado - Solo 7 Características Principales**")
+                
+                # Característica 1: Gender
+                gender = st.selectbox("👤 Género", ["Male", "Female"])
+                
+                # Característica 2: Tenure
+                tenure = st.number_input("📅 Meses como Cliente (tenure)", min_value=0, max_value=100, value=12)
+                
+                # Características 3 y 4: Cargos
+                col_cargos1, col_cargos2 = st.columns(2)
+                with col_cargos1:
+                    MonthlyCharges = st.number_input("💰 Cargo Mensual ($)", min_value=0.0, value=50.0)
+                with col_cargos2:
+                    TotalCharges = st.number_input("💳 Total Cargos ($)", min_value=0.0, value=1000.0)
+                
+                # Característica 5: Internet Service
+                InternetService = st.selectbox("🌐 Servicio de Internet", ["DSL", "Fiber optic", "No"])
+                
+                # Característica 6: Payment Method
+                PaymentMethod = st.selectbox("💳 Método de Pago", 
                     ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
+                
+                # Característica 7: Contract
+                Contract = st.selectbox("📋 Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
+                
+                # Las demás variables las ponemos con valores por defecto para que el modelo funcione
+                SeniorCitizen = 0
+                Partner = "No"
+                Dependents = "No"
+                PhoneService = "Yes"
+                MultipleLines = "No"
+                OnlineSecurity = "No"
+                OnlineBackup = "No"
+                DeviceProtection = "No"
+                TechSupport = "No"
+                StreamingTV = "No"
+                StreamingMovies = "No"
+                PaperlessBilling = "Yes"
+                
+            else:
+                # ============================================================
+                # FORMULARIO COMPLETO - TODAS LAS 19 CARACTERÍSTICAS
+                # ============================================================
+                
+                st.markdown("**📋 Formulario Completo - Todas las Características**")
+                
+                # Información básica
+                st.markdown("**👤 Información Personal**")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    gender = st.selectbox("Género", ["Male", "Female"])
+                    SeniorCitizen = st.selectbox("¿Es Senior?", [0, 1], format_func=lambda x: "No" if x == 0 else "Sí")
+                    Partner = st.selectbox("¿Tiene Pareja?", ["No", "Yes"])
+                
+                with col2:
+                    Dependents = st.selectbox("¿Tiene Dependientes?", ["No", "Yes"])
+                    tenure = st.number_input("Meses como Cliente", min_value=0, max_value=100, value=12)
+                
+                # Servicios
+                st.markdown("**📞 Servicios**")
+                col3, col4 = st.columns(2)
+                
+                with col3:
+                    PhoneService = st.selectbox("Servicio Telefónico", ["Yes", "No"])
+                    MultipleLines = st.selectbox("Múltiples Líneas", ["No", "Yes"])
+                    InternetService = st.selectbox("Internet", ["DSL", "Fiber optic", "No"])
+                
+                with col4:
+                    OnlineSecurity = st.selectbox("Seguridad Online", ["No", "Yes"])
+                    OnlineBackup = st.selectbox("Backup Online", ["No", "Yes"])
+                    DeviceProtection = st.selectbox("Protección de Dispositivos", ["No", "Yes"])
+                
+                # Más servicios
+                col5, col6 = st.columns(2)
+                
+                with col5:
+                    TechSupport = st.selectbox("Soporte Técnico", ["No", "Yes"])
+                    StreamingTV = st.selectbox("Streaming TV", ["No", "Yes"])
+                
+                with col6:
+                    StreamingMovies = st.selectbox("Streaming Movies", ["No", "Yes"])
+                
+                # Contrato y pagos
+                st.markdown("**💳 Contrato y Pagos**")
+                col7, col8 = st.columns(2)
+                
+                with col7:
+                    Contract = st.selectbox("Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
+                    PaperlessBilling = st.selectbox("Facturación Sin Papel", ["Yes", "No"])
+                
+                with col8:
+                    PaymentMethod = st.selectbox("Método de Pago", 
+                        ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
+                
+                # Cargos
+                col9, col10 = st.columns(2)
+                
+                with col9:
+                    MonthlyCharges = st.number_input("Cargo Mensual ($)", min_value=0.0, value=50.0)
+                
+                with col10:
+                    TotalCharges = st.number_input("Total Cargos ($)", min_value=0.0, value=1000.0)
             
-            # Cargos
-            col9, col10 = st.columns(2)
-            
-            with col9:
-                MonthlyCharges = st.number_input("Cargo Mensual ($)", min_value=0.0, value=50.0)
-            
-            with col10:
-                TotalCharges = st.number_input("Total Cargos ($)", min_value=0.0, value=1000.0)
-            
-            # Selector de modelo
-            st.markdown("**🤖 Selección de Modelo**")
-            modelo_seleccionado = st.selectbox("Elige un Modelo", list(modelos_disponibles.keys()))
-            
-            # Botón para predecir
+            # Botón para predecir (igual para ambos formularios)
             boton_predecir = st.form_submit_button("🚀 Hacer Predicción", type="primary")
     
     with col_resultado:
@@ -373,14 +455,35 @@ with tab1:
             }
             
             try:
-                # Determinar si es un modelo de 7 features o completo
-                usar_7_features = "(7 Features)" in modelo_seleccionado
-                
-                # Procesar los datos
+                # Procesar los datos según el tipo de features seleccionado
                 datos_procesados = procesar_datos_cliente(datos_cliente, usar_7_features)
                 
-                # Obtener el modelo
-                modelo = modelos_disponibles[modelo_seleccionado]
+                # Obtener el modelo correcto
+                # Si el usuario eligió 7 features pero el modelo no es de 7 features, buscar uno compatible
+                if usar_7_features:
+                    # Buscar modelo de 7 features que coincida
+                    modelo_base = modelo_seleccionado.replace(" (Completo)", "").replace(" (7 Features)", "")
+                    modelo_7_features = f"{modelo_base} (7 Features)"
+                    
+                    if modelo_7_features in modelos_disponibles:
+                        modelo_a_usar = modelo_7_features
+                        modelo = modelos_disponibles[modelo_7_features]
+                    else:
+                        # Si no existe el modelo de 7 features, usar el completo pero con datos de 7 features
+                        modelo_a_usar = modelo_seleccionado
+                        modelo = modelos_disponibles[modelo_seleccionado]
+                else:
+                    # Buscar modelo completo que coincida
+                    modelo_base = modelo_seleccionado.replace(" (Completo)", "").replace(" (7 Features)", "")
+                    modelo_completo = f"{modelo_base} (Completo)"
+                    
+                    if modelo_completo in modelos_disponibles:
+                        modelo_a_usar = modelo_completo
+                        modelo = modelos_disponibles[modelo_completo]
+                    else:
+                        # Si no existe el modelo completo, usar el seleccionado
+                        modelo_a_usar = modelo_seleccionado
+                        modelo = modelos_disponibles[modelo_seleccionado]
                 
                 # Hacer la predicción
                 prediccion = modelo.predict(datos_procesados)[0]
@@ -409,11 +512,13 @@ with tab1:
                 st.plotly_chart(fig, use_container_width=True)
                 
                 # Información del modelo usado
-                st.info(f"**Modelo usado:** {modelo_seleccionado}")
+                st.info(f"**Modelo usado:** {modelo_a_usar}")
                 st.info(f"**Features usadas:** {'7' if usar_7_features else '19'}")
+                st.info(f"**Tipo seleccionado:** {tipo_features}")
                 
             except Exception as e:
                 st.error(f"Error en la predicción: {e}")
+                st.error("Verifica que el modelo seleccionado sea compatible con el tipo de features elegido")
 
 # ============================================================================
 # PESTAÑA 2: EDA SIMPLE
@@ -751,26 +856,37 @@ with tab5:
     """)
 
 # ============================================================================
-# INFORMACIÓN FINAL EN LA SIDEBAR
+# INFORMACIÓN ADICIONAL AL FINAL
 # ============================================================================
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 📖 Guía Rápida")
-st.sidebar.markdown("""
-**🔮 Predicción:** Introduce datos de un cliente y obtén una predicción
+# Información del estado de carga
+st.markdown("---")
+st.markdown("### 📊 Estado de la Aplicación")
 
-**📊 EDA:** Explora los datos originales con gráficos básicos
+col_status1, col_status2, col_status3 = st.columns(3)
 
-**🧹 Datos Limpios:** Ve cómo se procesaron los datos
+with col_status1:
+    st.metric("🤖 Modelos Cargados", len(modelos_disponibles))
 
-**📈 Métricas:** Compara rendimiento, peso y tiempo de los modelos
+with col_status2:
+    if dataset_original is not None:
+        st.metric("📊 Filas en Dataset", len(dataset_original))
+    else:
+        st.metric("📊 Filas en Dataset", "Error")
 
-**💡 Dashboard:** Resumen ejecutivo con insights de negocio
-""")
-
-st.sidebar.info("💡 **Tip:** Los modelos con '(7 Features)' son más rápidos pero menos precisos")
+with col_status3:
+    if X_limpio is not None:
+        st.metric("🧹 Features Limpias", len(X_limpio.columns))
+    else:
+        st.metric("🧹 Features Limpias", "Error")
 
 # Información del desarrollador
-st.sidebar.markdown("---")
-st.sidebar.markdown("**👨‍💻 Desarrollado para aprendizaje de ML**")
-st.sidebar.markdown("**🎯 Versión:** Simple y Educativa")
+st.markdown("---")
+st.markdown("**👨‍💻 Aplicación de Machine Learning para Predicción de Churn**")
+st.markdown("**🎯 Versión:** Simple y Educativa")
+st.markdown("**💡 Tip:** Usa 'Solo las 7 más importantes' para predicciones más rápidas")
+
+if len(modelos_disponibles) > 0:
+    st.success("✅ Aplicación lista para usar")
+else:
+    st.error("❌ No hay modelos disponibles")
