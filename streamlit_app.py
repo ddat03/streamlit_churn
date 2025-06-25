@@ -15,8 +15,7 @@ warnings.filterwarnings('ignore')
 # ============================================================================
 
 st.set_page_config(
-    page_title="🔮 Predictor de Churn",
-    page_icon="🔮",
+    page_title="Predictor de Churn",
     layout="wide"
 )
 
