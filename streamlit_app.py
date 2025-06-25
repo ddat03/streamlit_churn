@@ -4,1215 +4,859 @@ import numpy as np
 import joblib
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_matrix
+import time
+import os
+from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 import warnings
 warnings.filterwarnings('ignore')
 
 # ============================================================================
-# CONFIGURACIÓN DE PÁGINA
+# CONFIGURACIÓN BÁSICA DE LA PÁGINA
 # ============================================================================
 
 st.set_page_config(
-    page_title="🔮 Telco Customer Churn Predictor",
+    page_title="🔮 Predictor de Churn",
     page_icon="🔮",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# CSS personalizado para mejorar el diseño
-st.markdown("""
-<style>
-    .main-header {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-        margin: 0.5rem 0;
-    }
-    .insight-box {
-        background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        color: white;
-        margin: 1rem 0;
-    }
-    .risk-high {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-    }
-    .risk-medium {
-        background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-    }
-    .risk-low {
-        background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        color: white;
-        text-align: center;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Título principal
+st.title("🔮 Predictor de Churn de Clientes Telco")
+st.markdown("### Aplicación Simple de Machine Learning")
 
 # ============================================================================
-# CONFIGURACIÓN GLOBAL
+# LISTA DE CARACTERÍSTICAS (FEATURES)
 # ============================================================================
 
-# Features completas (19 features)
-COMPLETE_FEATURES = [
+# Las 19 características completas
+FEATURES_COMPLETAS = [
     'SeniorCitizen', 'tenure', 'MonthlyCharges', 'TotalCharges', 'gender', 
     'Partner', 'Dependents', 'PhoneService', 'MultipleLines', 'InternetService', 
     'OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport', 
     'StreamingTV', 'StreamingMovies', 'Contract', 'PaperlessBilling', 'PaymentMethod'
 ]
 
-# Top 7 features más importantes
-TOP_FEATURES = [
+# Las 7 características más importantes
+FEATURES_TOP_7 = [
     'TotalCharges', 'MonthlyCharges', 'tenure', 'InternetService', 
     'PaymentMethod', 'Contract', 'gender'
 ]
 
-# Mapeos para features categóricas
-FEATURE_MAPPINGS = {
-    'InternetService': {'DSL': 0, 'Fiber optic': 1, 'No': 2},
-    'PaymentMethod': {
-        'Electronic check': 1, 'Mailed check': 0, 
-        'Bank transfer (automatic)': 0, 'Credit card (automatic)': 0
-    },
-    'Contract': {'Month-to-month': 0, 'One year': 0, 'Two year': 1},
-    'gender': {'Female': 0, 'Male': 1},
-    'Partner': {'No': 0, 'Yes': 1},
-    'Dependents': {'No': 0, 'Yes': 1},
-    'PhoneService': {'No': 0, 'Yes': 1},
-    'MultipleLines': {'No': 0, 'Yes': 1},
-    'OnlineSecurity': {'No': 0, 'Yes': 1},
-    'OnlineBackup': {'No': 0, 'Yes': 1},
-    'DeviceProtection': {'No': 0, 'Yes': 1},
-    'TechSupport': {'No': 0, 'Yes': 1},
-    'StreamingTV': {'No': 0, 'Yes': 1},
-    'StreamingMovies': {'No': 0, 'Yes': 1},
-    'PaperlessBilling': {'No': 0, 'Yes': 1}
-}
-
 # ============================================================================
-# FUNCIONES DE CARGA DE DATOS
+# FUNCIÓN PARA CARGAR EL DATASET
 # ============================================================================
 
-@st.cache_data
-def load_dataset():
-    """Cargar el dataset de Telco Customer Churn"""
+@st.cache_data  # Esto hace que Streamlit guarde los datos en memoria
+def cargar_dataset():
+    """
+    Función simple para cargar el archivo CSV
+    """
     try:
+        # Intentar cargar el archivo real
         df = pd.read_csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
-        st.success("✅ Dataset cargado exitosamente")
+        st.success("✅ Dataset cargado correctamente")
         return df
+    
     except FileNotFoundError:
-        st.error("❌ No se encontró el archivo 'WA_Fn-UseC_-Telco-Customer-Churn.csv'")
-        # Dataset simulado para demostración
-        np.random.seed(42)
-        n_samples = 1000
+        st.error("❌ No se encontró el archivo CSV")
+        # Crear datos de ejemplo si no encuentra el archivo
+        st.warning("⚠️ Creando datos de ejemplo...")
         
-        df_sim = pd.DataFrame({
-            'customerID': [f'ID_{i}' for i in range(n_samples)],
-            'gender': np.random.choice(['Male', 'Female'], n_samples),
-            'SeniorCitizen': np.random.choice([0, 1], n_samples, p=[0.85, 0.15]),
-            'Partner': np.random.choice(['Yes', 'No'], n_samples),
-            'Dependents': np.random.choice(['Yes', 'No'], n_samples, p=[0.3, 0.7]),
-            'tenure': np.random.randint(1, 73, n_samples),
-            'PhoneService': np.random.choice(['Yes', 'No'], n_samples, p=[0.9, 0.1]),
-            'MultipleLines': np.random.choice(['Yes', 'No'], n_samples),
-            'InternetService': np.random.choice(['DSL', 'Fiber optic', 'No'], n_samples),
-            'OnlineSecurity': np.random.choice(['Yes', 'No', 'No internet service'], n_samples),
-            'OnlineBackup': np.random.choice(['Yes', 'No', 'No internet service'], n_samples),
-            'DeviceProtection': np.random.choice(['Yes', 'No', 'No internet service'], n_samples),
-            'TechSupport': np.random.choice(['Yes', 'No', 'No internet service'], n_samples),
-            'StreamingTV': np.random.choice(['Yes', 'No', 'No internet service'], n_samples),
-            'StreamingMovies': np.random.choice(['Yes', 'No', 'No internet service'], n_samples),
-            'Contract': np.random.choice(['Month-to-month', 'One year', 'Two year'], n_samples),
-            'PaperlessBilling': np.random.choice(['Yes', 'No'], n_samples),
-            'PaymentMethod': np.random.choice(['Electronic check', 'Mailed check', 'Bank transfer (automatic)', 'Credit card (automatic)'], n_samples),
-            'MonthlyCharges': np.random.uniform(18.25, 118.75, n_samples),
-            'TotalCharges': np.random.uniform(18.8, 8684.8, n_samples),
-            'Churn': np.random.choice(['Yes', 'No'], n_samples, p=[0.265, 0.735])
+        # Crear 500 filas de datos simulados
+        n_filas = 500
+        np.random.seed(42)  # Para que siempre sean los mismos datos
+        
+        df_ejemplo = pd.DataFrame({
+            'customerID': [f'ID_{i}' for i in range(n_filas)],
+            'gender': np.random.choice(['Male', 'Female'], n_filas),
+            'SeniorCitizen': np.random.choice([0, 1], n_filas),
+            'Partner': np.random.choice(['Yes', 'No'], n_filas),
+            'Dependents': np.random.choice(['Yes', 'No'], n_filas),
+            'tenure': np.random.randint(1, 73, n_filas),
+            'PhoneService': np.random.choice(['Yes', 'No'], n_filas),
+            'MultipleLines': np.random.choice(['Yes', 'No'], n_filas),
+            'InternetService': np.random.choice(['DSL', 'Fiber optic', 'No'], n_filas),
+            'OnlineSecurity': np.random.choice(['Yes', 'No'], n_filas),
+            'OnlineBackup': np.random.choice(['Yes', 'No'], n_filas),
+            'DeviceProtection': np.random.choice(['Yes', 'No'], n_filas),
+            'TechSupport': np.random.choice(['Yes', 'No'], n_filas),
+            'StreamingTV': np.random.choice(['Yes', 'No'], n_filas),
+            'StreamingMovies': np.random.choice(['Yes', 'No'], n_filas),
+            'Contract': np.random.choice(['Month-to-month', 'One year', 'Two year'], n_filas),
+            'PaperlessBilling': np.random.choice(['Yes', 'No'], n_filas),
+            'PaymentMethod': np.random.choice(['Electronic check', 'Mailed check'], n_filas),
+            'MonthlyCharges': np.random.uniform(20, 120, n_filas),
+            'TotalCharges': np.random.uniform(20, 8000, n_filas),
+            'Churn': np.random.choice(['Yes', 'No'], n_filas)
         })
         
-        # Simular algunos valores de TotalCharges como string para demostrar limpieza
-        mask = np.random.random(n_samples) < 0.02
-        df_sim.loc[mask, 'TotalCharges'] = ' '
-        
-        st.warning("⚠️ Usando dataset simulado para demostración")
-        return df_sim
+        return df_ejemplo
 
-def clean_dataset(df_raw):
-    """Limpiar el dataset según el código específico proporcionado"""
-    df_clean = df_raw.copy()
+# ============================================================================
+# FUNCIÓN PARA LIMPIAR LOS DATOS
+# ============================================================================
+
+def limpiar_datos(df_original):
+    """
+    Función simple para limpiar los datos como me dijiste
+    """
+    # Hacer una copia para no modificar el original
+    df = df_original.copy()
     
-    # Remover customerID si existe
-    if 'customerID' in df_clean.columns:
-        df_clean = df_clean.drop('customerID', axis=1)
+    # 1. Eliminar customerID si existe
+    if 'customerID' in df.columns:
+        df = df.drop('customerID', axis=1)
+        st.write("✅ CustomerID eliminado")
     
-    # Separar target y features
-    if 'Churn' in df_clean.columns:
-        y = df_clean['Churn'].map({'No': 0, 'Yes': 1})
-        X = df_clean.drop('Churn', axis=1)
-    else:
-        st.error("No se encontró la columna 'Churn' en el dataset")
-        return None, None, None
+    # 2. Separar la variable objetivo (y) de las características (X)
+    if 'Churn' in df.columns:
+        y = df['Churn'].map({'No': 0, 'Yes': 1})  # Convertir a números
+        X = df.drop('Churn', axis=1)
+        st.write("✅ Variable objetivo separada y convertida a números")
     
-    # Convertir TotalCharges a numérico
+    # 3. Convertir TotalCharges a números
     if 'TotalCharges' in X.columns:
         X['TotalCharges'] = pd.to_numeric(X['TotalCharges'], errors='coerce').fillna(0)
+        st.write("✅ TotalCharges convertido a números")
     
-    # Simplificar categorías redundantes
-    services_to_fix = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
-                      'TechSupport', 'StreamingTV', 'StreamingMovies']
+    # 4. Simplificar categorías como me dijiste
+    servicios_arreglar = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
+                         'TechSupport', 'StreamingTV', 'StreamingMovies']
     
-    for service in services_to_fix:
-        if service in X.columns:
-            X[service] = X[service].replace('No internet service', 'No')
+    for servicio in servicios_arreglar:
+        if servicio in X.columns:
+            X[servicio] = X[servicio].replace('No internet service', 'No')
     
-    return df_clean, X, y
+    st.write("✅ Categorías simplificadas")
+    
+    return X, y
 
 # ============================================================================
-# CLASE MODELO SIMULADO
+# FUNCIÓN PARA CARGAR LOS MODELOS
 # ============================================================================
 
-class MockChurnModel:
-    """Modelo simulado para cuando los modelos reales fallan"""
+@st.cache_resource  # Esto hace que Streamlit guarde los modelos en memoria
+def cargar_modelos():
+    """
+    Función para cargar todos los modelos (completos y de 7 features)
+    """
+    modelos = {}
+    errores = []
     
-    def __init__(self, name):
-        self.name = name
-        np.random.seed(42)
+    # Lista de archivos de modelos que deberíamos tener
+    archivos_modelos = {
+        # Modelos completos (19 features)
+        'Stacking Diverse (Completo)': 'stacking_diverse_trained.pkl',
+        'Logistic Regression (Completo)': 'Single Classifier (Logistic Regression)_trained.pkl',
+        'Voting Classifier (Completo)': 'Voting Classifier (Soft)_trained.pkl',
         
-    def predict(self, X):
-        predictions = []
-        for sample in X:
-            if len(sample) == 7:  # Versión reducida
-                total_charges, monthly_charges, tenure, fiber, electronic, two_year, male = sample
-                
-                churn_score = 0
-                if monthly_charges > 70: churn_score += 0.3
-                if tenure < 12: churn_score += 0.4
-                if fiber == 1: churn_score += 0.2
-                if electronic == 1: churn_score += 0.15
-                if two_year == 0: churn_score += 0.25
-                
-                churn_score += np.random.normal(0, 0.1)
-                prediction = 1 if churn_score > 0.5 else 0
-                
-            else:  # Versión completa
-                senior, tenure, monthly, total = sample[:4]
-                
-                churn_score = 0
-                if monthly > 70: churn_score += 0.3
-                if tenure < 12: churn_score += 0.4
-                if senior == 1: churn_score += 0.1
-                
-                churn_score += np.random.normal(0, 0.1)
-                prediction = 1 if churn_score > 0.5 else 0
-                
-            predictions.append(prediction)
-            
-        return np.array(predictions)
-    
-    def predict_proba(self, X):
-        predictions = self.predict(X)
-        probabilities = []
-        
-        for pred in predictions:
-            if pred == 1:
-                prob_churn = np.random.uniform(0.6, 0.9)
-            else:
-                prob_churn = np.random.uniform(0.1, 0.4)
-                
-            prob_no_churn = 1 - prob_churn
-            probabilities.append([prob_no_churn, prob_churn])
-            
-        return np.array(probabilities)
-
-# ============================================================================
-# FUNCIONES DE CARGA DE MODELOS
-# ============================================================================
-
-@st.cache_resource
-def load_models():
-    """Carga modelos entrenados o crea modelos simulados"""
-    try:
-        models = {
-            'Stacking Diverse': joblib.load('stacking_diverse_trained.pkl'),
-            'Logistic Regression': joblib.load('Single Classifier (Logistic Regression)_trained.pkl'),
-            'Voting Classifier': joblib.load('Voting Classifier (Soft)_trained.pkl')
-        }
-        return models, "real"
-        
-    except Exception as e:
-        st.warning(f"⚠️ No se pudieron cargar modelos reales: {e}")
-        st.info("🔄 Usando modelos simulados para demostración...")
-        
-        models = {
-            'Stacking Diverse': MockChurnModel('Stacking Diverse'),
-            'Logistic Regression': MockChurnModel('Logistic Regression'),
-            'Voting Classifier': MockChurnModel('Voting Classifier')
-        }
-        return models, "simulated"
-
-# ============================================================================
-# FUNCIONES DE PROCESAMIENTO
-# ============================================================================
-
-def preprocess_customer_data(customer_data, version="completa"):
-    """Preprocesar datos del cliente según la versión seleccionada"""
-    try:
-        if version == "reducida":
-            processed_data = []
-            
-            # Top 7 features
-            processed_data.append(float(customer_data.get('TotalCharges', 0)))
-            processed_data.append(float(customer_data.get('MonthlyCharges', 0)))
-            processed_data.append(int(customer_data.get('tenure', 0)))
-            
-            # Features categóricas convertidas a binarias
-            internet_service = customer_data.get('InternetService', 'DSL')
-            processed_data.append(1 if internet_service == 'Fiber optic' else 0)
-            
-            payment_method = customer_data.get('PaymentMethod', 'Electronic check')
-            processed_data.append(1 if payment_method == 'Electronic check' else 0)
-            
-            contract = customer_data.get('Contract', 'Month-to-month')
-            processed_data.append(1 if contract == 'Two year' else 0)
-            
-            gender = customer_data.get('gender', 'Male')
-            processed_data.append(1 if gender == 'Male' else 0)
-            
-            return np.array(processed_data).reshape(1, -1)
-            
-        else:
-            # Versión completa
-            processed_data = []
-            
-            for feature in COMPLETE_FEATURES:
-                if feature in ['SeniorCitizen', 'tenure']:
-                    processed_data.append(int(customer_data.get(feature, 0)))
-                elif feature in ['MonthlyCharges', 'TotalCharges']:
-                    processed_data.append(float(customer_data.get(feature, 0)))
-                else:
-                    value = customer_data.get(feature, list(FEATURE_MAPPINGS[feature].keys())[0])
-                    mapped_value = FEATURE_MAPPINGS[feature].get(value, 0)
-                    processed_data.append(mapped_value)
-            
-            return np.array(processed_data).reshape(1, -1)
-            
-    except Exception as e:
-        st.error(f"Error en preprocessing: {e}")
-        return None
-
-def predict_churn(customer_data, model_name, version, models):
-    """Realizar predicción de churn"""
-    try:
-        input_processed = preprocess_customer_data(customer_data, version)
-        
-        if input_processed is None:
-            return {"success": False, "error": "Error en preprocessing de datos"}
-        
-        model = models[model_name]
-        
-        prediction = model.predict(input_processed)[0]
-        probabilities = model.predict_proba(input_processed)[0]
-        
-        return {
-            "success": True,
-            "prediction": int(prediction),
-            "prediction_label": "Churn (Abandono)" if prediction == 1 else "No Churn (Permanece)",
-            "probabilities": {
-                "no_churn": float(probabilities[0]),
-                "churn": float(probabilities[1])
-            },
-            "model_used": model_name,
-            "version_used": version,
-            "features_used": len(input_processed[0])
-        }
-        
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
-# ============================================================================
-# FUNCIONES DE VISUALIZACIÓN
-# ============================================================================
-
-def create_eda_plots(df_raw):
-    """Crear gráficos para EDA"""
-    plots = {}
-    
-    # 1. Distribución del target
-    churn_counts = df_raw['Churn'].value_counts()
-    plots['target_dist'] = px.pie(
-        values=churn_counts.values, 
-        names=churn_counts.index,
-        title="Distribución de Churn",
-        color_discrete_map={'No': '#2E8B57', 'Yes': '#DC143C'}
-    )
-    
-    # 2. Distribución por género
-    plots['gender_dist'] = px.histogram(
-        df_raw, x='gender', color='Churn',
-        title="Distribución de Churn por Género",
-        barmode='group'
-    )
-    
-    # 3. Distribución por tipo de contrato
-    plots['contract_dist'] = px.histogram(
-        df_raw, x='Contract', color='Churn',
-        title="Distribución de Churn por Tipo de Contrato",
-        barmode='group'
-    )
-    
-    # 4. Distribución de tenure
-    plots['tenure_dist'] = px.histogram(
-        df_raw, x='tenure', color='Churn',
-        title="Distribución de Tenure por Churn",
-        nbins=30, opacity=0.7
-    )
-    
-    # 5. Distribución de MonthlyCharges
-    plots['monthly_charges'] = px.box(
-        df_raw, x='Churn', y='MonthlyCharges',
-        title="Distribución de Cargos Mensuales por Churn"
-    )
-    
-    # 6. Servicio de Internet vs Churn
-    plots['internet_service'] = px.histogram(
-        df_raw, x='InternetService', color='Churn',
-        title="Distribución de Churn por Servicio de Internet",
-        barmode='group'
-    )
-    
-    return plots
-
-def create_correlation_matrix(X_clean):
-    """Crear matriz de correlación"""
-    # Seleccionar solo variables numéricas
-    numeric_cols = X_clean.select_dtypes(include=[np.number]).columns
-    corr_matrix = X_clean[numeric_cols].corr()
-    
-    fig = px.imshow(
-        corr_matrix,
-        title="Matriz de Correlación de Variables Numéricas",
-        color_continuous_scale='RdBu_r',
-        aspect="auto"
-    )
-    
-    fig.update_layout(height=600)
-    return fig
-
-def create_metrics_plots(model_name, model_type):
-    """Crear gráficos de métricas específicos por modelo"""
-    # Métricas simuladas específicas por modelo
-    metrics_data = {
-        'Stacking Diverse': {
-            'accuracy_complete': 0.862, 'f1_complete': 0.841, 'auc_complete': 0.895,
-            'accuracy_reduced': 0.847, 'f1_reduced': 0.823, 'auc_reduced': 0.878,
-            'confusion_matrix_complete': [[1054, 96], [124, 135]],
-            'confusion_matrix_reduced': [[1042, 108], [138, 121]]
-        },
-        'Logistic Regression': {
-            'accuracy_complete': 0.834, 'f1_complete': 0.812, 'auc_complete': 0.871,
-            'accuracy_reduced': 0.829, 'f1_reduced': 0.805, 'auc_reduced': 0.863,
-            'confusion_matrix_complete': [[1038, 112], [141, 118]],
-            'confusion_matrix_reduced': [[1031, 119], [152, 107]]
-        },
-        'Voting Classifier': {
-            'accuracy_complete': 0.851, 'f1_complete': 0.829, 'auc_complete': 0.883,
-            'accuracy_reduced': 0.836, 'f1_reduced': 0.814, 'auc_reduced': 0.869,
-            'confusion_matrix_complete': [[1046, 104], [133, 126]],
-            'confusion_matrix_reduced': [[1035, 115], [147, 112]]
-        }
+        # Modelos de 7 features
+        'Stacking Diverse (7 Features)': 'stacking_diverse_trained_7.pkl',
+        'Logistic Regression (7 Features)': 'Single Classifier_7.pkl',
+        'Voting Classifier (7 Features)': 'Voting Classifier (Soft)_trained_7.pkl'
     }
     
-    data = metrics_data[model_name]
-    plots = {}
+    # Intentar cargar cada modelo
+    for nombre_modelo, archivo in archivos_modelos.items():
+        try:
+            modelo = joblib.load(archivo)
+            modelos[nombre_modelo] = modelo
+            st.write(f"✅ {nombre_modelo} cargado")
+        except FileNotFoundError:
+            errores.append(f"❌ No se encontró: {archivo}")
     
-    # 1. Comparación de métricas
-    versions = ['Completa', 'Reducida']
-    accuracy_values = [data['accuracy_complete'], data['accuracy_reduced']]
-    f1_values = [data['f1_complete'], data['f1_reduced']]
-    auc_values = [data['auc_complete'], data['auc_reduced']]
+    # Mostrar errores si los hay
+    if errores:
+        st.warning("Algunos modelos no se pudieron cargar:")
+        for error in errores:
+            st.write(error)
     
-    plots['metrics_comparison'] = go.Figure()
-    plots['metrics_comparison'].add_trace(go.Bar(name='Accuracy', x=versions, y=accuracy_values))
-    plots['metrics_comparison'].add_trace(go.Bar(name='F1-Score', x=versions, y=f1_values))
-    plots['metrics_comparison'].add_trace(go.Bar(name='AUC', x=versions, y=auc_values))
-    plots['metrics_comparison'].update_layout(
-        title=f"Comparación de Métricas - {model_name}",
-        barmode='group',
-        yaxis_title="Score"
-    )
+    # Si no se cargó ningún modelo, crear modelos de ejemplo
+    if len(modelos) == 0:
+        st.error("No se cargaron modelos reales. Creando modelos de ejemplo...")
+        modelos = crear_modelos_ejemplo()
     
-    # 2. Matriz de confusión - Versión completa
-    cm_complete = data['confusion_matrix_complete']
-    plots['confusion_matrix_complete'] = go.Figure(data=go.Heatmap(
-        z=cm_complete,
-        x=['Predicho: No Churn', 'Predicho: Churn'],
-        y=['Real: No Churn', 'Real: Churn'],
-        colorscale='Blues',
-        text=cm_complete,
-        texttemplate="%{text}",
-        textfont={"size": 16},
-    ))
-    plots['confusion_matrix_complete'].update_layout(
-        title=f"Matriz de Confusión (Versión Completa) - {model_name}",
-        height=400
-    )
-    
-    # 3. Matriz de confusión - Versión reducida
-    cm_reduced = data['confusion_matrix_reduced']
-    plots['confusion_matrix_reduced'] = go.Figure(data=go.Heatmap(
-        z=cm_reduced,
-        x=['Predicho: No Churn', 'Predicho: Churn'],
-        y=['Real: No Churn', 'Real: Churn'],
-        colorscale='Oranges',
-        text=cm_reduced,
-        texttemplate="%{text}",
-        textfont={"size": 16},
-    ))
-    plots['confusion_matrix_reduced'].update_layout(
-        title=f"Matriz de Confusión (Versión Reducida) - {model_name}",
-        height=400
-    )
-    
-    # 4. Feature importance específica por modelo
-    importance_data = {
-        'Stacking Diverse': {
-            'features': ['TotalCharges', 'MonthlyCharges', 'tenure', 'Contract_Two year', 
-                        'InternetService_Fiber optic', 'PaymentMethod_Electronic check', 'gender_Male',
-                        'OnlineSecurity', 'TechSupport', 'PaperlessBilling'],
-            'importance': [0.243, 0.198, 0.156, 0.089, 0.067, 0.054, 0.032, 0.028, 0.025, 0.023]
-        },
-        'Logistic Regression': {
-            'features': ['TotalCharges', 'MonthlyCharges', 'tenure', 'Contract_Two year', 
-                        'InternetService_Fiber optic', 'PaymentMethod_Electronic check', 'gender_Male',
-                        'OnlineSecurity', 'TechSupport', 'PaperlessBilling'],
-            'importance': [0.267, 0.201, 0.143, 0.095, 0.071, 0.058, 0.029, 0.026, 0.023, 0.021]
-        },
-        'Voting Classifier': {
-            'features': ['TotalCharges', 'MonthlyCharges', 'tenure', 'Contract_Two year', 
-                        'InternetService_Fiber optic', 'PaymentMethod_Electronic check', 'gender_Male',
-                        'OnlineSecurity', 'TechSupport', 'PaperlessBilling'],
-            'importance': [0.251, 0.194, 0.149, 0.092, 0.069, 0.056, 0.031, 0.027, 0.024, 0.022]
-        }
-    }
-    
-    imp_data = importance_data[model_name]
-    plots['feature_importance'] = go.Figure([go.Bar(
-        x=imp_data['importance'],
-        y=imp_data['features'],
-        orientation='h',
-        marker_color='#4472C4'
-    )])
-    plots['feature_importance'].update_layout(
-        title=f"Importancia de Características - {model_name}",
-        xaxis_title="Importancia",
-        height=500
-    )
-    
-    return plots, data
+    return modelos
 
-def get_recommendations(churn_probability, customer_data):
-    """Generar recomendaciones basadas en la probabilidad de churn"""
-    recommendations = []
+# ============================================================================
+# FUNCIÓN PARA CREAR MODELOS DE EJEMPLO (SI NO EXISTEN LOS REALES)
+# ============================================================================
+
+def crear_modelos_ejemplo():
+    """
+    Crear modelos de ejemplo si no se pueden cargar los reales
+    """
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.linear_model import LogisticRegression
     
-    if churn_probability >= 0.7:
-        recommendations = [
-            "🚨 **ACCIÓN INMEDIATA**: Contactar al cliente en las próximas 24 horas",
-            "💰 Ofrecer descuentos de hasta 20% por 6 meses",
-            "📞 Llamada de retención del gerente de cuentas",
-            "🎁 Servicios premium gratuitos por 3 meses",
-            "📋 Revisión completa del plan de servicios"
-        ]
-    elif churn_probability >= 0.4:
-        recommendations = [
-            "📋 Monitorear satisfacción del cliente mensualmente",
-            "📧 Enviar encuesta de satisfacción personalizada",
-            "🎯 Ofrecer servicios adicionales con descuento",
-            "📞 Seguimiento proactivo cada 2 meses",
-            "💡 Analizar patrones de uso y optimizar plan"
-        ]
+    modelos_ejemplo = {}
+    
+    # Crear modelos simples de ejemplo
+    modelos_ejemplo['Ejemplo Random Forest'] = RandomForestClassifier(n_estimators=10, random_state=42)
+    modelos_ejemplo['Ejemplo Logistic Regression'] = LogisticRegression(random_state=42)
+    
+    st.info("🔧 Usando modelos de ejemplo para demostración")
+    
+    return modelos_ejemplo
+
+# ============================================================================
+# FUNCIÓN PARA OBTENER EL PESO DE UN MODELO
+# ============================================================================
+
+def obtener_peso_modelo(modelo, nombre_archivo):
+    """
+    Función para obtener el peso (tamaño) de un modelo
+    """
+    try:
+        # Obtener el tamaño del archivo en bytes
+        tamaño_bytes = os.path.getsize(nombre_archivo)
+        
+        # Convertir a MB (megabytes)
+        tamaño_mb = tamaño_bytes / (1024 * 1024)
+        
+        return tamaño_mb
+    except:
+        return 0.0
+
+# ============================================================================
+# FUNCIÓN PARA MEDIR TIEMPO DE PREDICCIÓN
+# ============================================================================
+
+def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
+    """
+    Función para medir cuánto tiempo tarda el modelo en hacer predicciones
+    """
+    try:
+        tiempos = []
+        
+        # Hacer varias predicciones para obtener un promedio
+        for i in range(repeticiones):
+            inicio = time.time()
+            modelo.predict(datos_prueba)
+            fin = time.time()
+            tiempos.append(fin - inicio)
+        
+        # Calcular el tiempo promedio en milisegundos
+        tiempo_promedio_ms = np.mean(tiempos) * 1000
+        
+        return tiempo_promedio_ms
+    except:
+        return 0.0
+
+# ============================================================================
+# FUNCIÓN PARA PROCESAR DATOS DEL CLIENTE
+# ============================================================================
+
+def procesar_datos_cliente(datos_cliente, usar_7_features=False):
+    """
+    Función simple para convertir los datos del cliente en números
+    que el modelo pueda entender
+    """
+    if usar_7_features:
+        # Solo usar las 7 características más importantes
+        datos_procesados = []
+        
+        # 1. TotalCharges (número)
+        datos_procesados.append(float(datos_cliente.get('TotalCharges', 0)))
+        
+        # 2. MonthlyCharges (número)
+        datos_procesados.append(float(datos_cliente.get('MonthlyCharges', 0)))
+        
+        # 3. tenure (número)
+        datos_procesados.append(int(datos_cliente.get('tenure', 0)))
+        
+        # 4. InternetService (convertir a número: Fiber optic = 1, otros = 0)
+        internet = datos_cliente.get('InternetService', 'DSL')
+        datos_procesados.append(1 if internet == 'Fiber optic' else 0)
+        
+        # 5. PaymentMethod (convertir a número: Electronic check = 1, otros = 0)
+        pago = datos_cliente.get('PaymentMethod', 'Electronic check')
+        datos_procesados.append(1 if pago == 'Electronic check' else 0)
+        
+        # 6. Contract (convertir a número: Two year = 1, otros = 0)
+        contrato = datos_cliente.get('Contract', 'Month-to-month')
+        datos_procesados.append(1 if contrato == 'Two year' else 0)
+        
+        # 7. gender (convertir a número: Male = 1, Female = 0)
+        genero = datos_cliente.get('gender', 'Male')
+        datos_procesados.append(1 if genero == 'Male' else 0)
+        
+        return np.array(datos_procesados).reshape(1, -1)
+    
     else:
-        recommendations = [
-            "⭐ Cliente estable - oportunidad ideal para upselling",
-            "🎯 Candidato prioritario para programas de referidos",
-            "📈 Ofrecer servicios premium y nuevas funcionalidades",
-            "👑 Invitar a programa VIP con beneficios exclusivos",
-            "🏆 Cliente modelo para casos de éxito y testimonios"
-        ]
-    
-    return recommendations
+        # Usar todas las 19 características (versión simplificada)
+        # En una versión real, tendrías que procesar todas las características
+        # Por simplicidad, usamos solo algunas importantes
+        datos_procesados = []
+        
+        # Características numéricas
+        datos_procesados.append(int(datos_cliente.get('SeniorCitizen', 0)))
+        datos_procesados.append(int(datos_cliente.get('tenure', 0)))
+        datos_procesados.append(float(datos_cliente.get('MonthlyCharges', 0)))
+        datos_procesados.append(float(datos_cliente.get('TotalCharges', 0)))
+        
+        # Características categóricas convertidas a números (simplificado)
+        datos_procesados.append(1 if datos_cliente.get('gender', 'Male') == 'Male' else 0)
+        datos_procesados.append(1 if datos_cliente.get('Partner', 'No') == 'Yes' else 0)
+        datos_procesados.append(1 if datos_cliente.get('Dependents', 'No') == 'Yes' else 0)
+        datos_procesados.append(1 if datos_cliente.get('PhoneService', 'No') == 'Yes' else 0)
+        datos_procesados.append(1 if datos_cliente.get('MultipleLines', 'No') == 'Yes' else 0)
+        
+        # InternetService (simplificado)
+        internet = datos_cliente.get('InternetService', 'DSL')
+        if internet == 'DSL':
+            datos_procesados.append(0)
+        elif internet == 'Fiber optic':
+            datos_procesados.append(1)
+        else:
+            datos_procesados.append(2)
+        
+        # Más características categóricas
+        datos_procesados.append(1 if datos_cliente.get('OnlineSecurity', 'No') == 'Yes' else 0)
+        datos_procesados.append(1 if datos_cliente.get('OnlineBackup', 'No') == 'Yes' else 0)
+        datos_procesados.append(1 if datos_cliente.get('DeviceProtection', 'No') == 'Yes' else 0)
+        datos_procesados.append(1 if datos_cliente.get('TechSupport', 'No') == 'Yes' else 0)
+        datos_procesados.append(1 if datos_cliente.get('StreamingTV', 'No') == 'Yes' else 0)
+        datos_procesados.append(1 if datos_cliente.get('StreamingMovies', 'No') == 'Yes' else 0)
+        
+        # Contract
+        contrato = datos_cliente.get('Contract', 'Month-to-month')
+        if contrato == 'Month-to-month':
+            datos_procesados.append(0)
+        elif contrato == 'One year':
+            datos_procesados.append(1)
+        else:
+            datos_procesados.append(2)
+        
+        # Últimas características
+        datos_procesados.append(1 if datos_cliente.get('PaperlessBilling', 'No') == 'Yes' else 0)
+        datos_procesados.append(1 if datos_cliente.get('PaymentMethod', 'Electronic check') == 'Electronic check' else 0)
+        
+        return np.array(datos_procesados).reshape(1, -1)
 
 # ============================================================================
-# INTERFAZ PRINCIPAL
+# CARGAR DATOS Y MODELOS AL INICIO
 # ============================================================================
 
-def main():
-    # Header mejorado
-    st.markdown("""
-    <div class="main-header">
-        <h1>🔮 Telco Customer Churn Predictor</h1>
-        <h3>Sistema Avanzado de Predicción de Abandono de Clientes</h3>
-        <p>Análisis Inteligente | Machine Learning | Insights de Negocio</p>
-    </div>
-    """, unsafe_allow_html=True)
+# Cargar el dataset
+st.sidebar.header("📊 Estado de Carga")
+dataset_original = cargar_dataset()
+
+# Limpiar los datos
+with st.sidebar:
+    with st.expander("🧹 Proceso de Limpieza"):
+        X_limpio, y_limpio = limpiar_datos(dataset_original)
+
+# Cargar los modelos
+with st.sidebar:
+    with st.expander("🤖 Modelos Cargados"):
+        modelos_disponibles = cargar_modelos()
+
+st.sidebar.success(f"✅ {len(modelos_disponibles)} modelos cargados")
+
+# ============================================================================
+# PESTAÑAS PRINCIPALES
+# ============================================================================
+
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "🔮 Predicción", 
+    "📊 EDA Simple", 
+    "🧹 Datos Limpios", 
+    "📈 Métricas y Rendimiento", 
+    "💡 Dashboard"
+])
+
+# ============================================================================
+# PESTAÑA 1: PREDICCIÓN
+# ============================================================================
+
+with tab1:
+    st.header("🔮 Hacer una Predicción")
     
-    # Cargar datos y modelos
-    with st.spinner("Cargando datos y modelos..."):
-        df_raw = load_dataset()
-        models, model_type = load_models()
-        df_clean, X_clean, y_clean = clean_dataset(df_raw)
+    # Dividir en dos columnas
+    col_formulario, col_resultado = st.columns([2, 1])
     
-    model_names = list(models.keys())
-    
-    # Sidebar mejorado
-    st.sidebar.markdown("## ⚙️ Configuración del Modelo")
-    
-    model_name = st.sidebar.selectbox(
-        "🎯 Selecciona el Modelo:",
-        model_names,
-        help="Selecciona el modelo de machine learning para realizar predicciones"
-    )
-    
-    version = st.sidebar.radio(
-        "🔧 Versión del Modelo:",
-        ["completa", "reducida"],
-        format_func=lambda x: "Completa (19 características)" if x == "completa" else "Reducida (7 características top)",
-        help="Versión completa usa todas las características, versión reducida usa solo las más importantes"
-    )
-    
-    # Información sobre la versión en sidebar
-    if version == "reducida":
-        st.sidebar.markdown("""
-        <div class="insight-box">
-        <strong>Top 7 Características:</strong><br>
-        1. TotalCharges<br>
-        2. MonthlyCharges<br>
-        3. tenure<br>
-        4. InternetService<br>
-        5. PaymentMethod<br>
-        6. Contract<br>
-        7. gender
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.sidebar.markdown("---")
-    
-    # Información del dataset
-    if df_raw is not None:
-        st.sidebar.markdown("### 📊 Información del Dataset")
-        st.sidebar.metric("Total de Registros", f"{len(df_raw):,}")
-        st.sidebar.metric("Tasa de Churn", f"{(df_raw['Churn'] == 'Yes').mean():.1%}")
-        st.sidebar.metric("Características", len(df_raw.columns) - 1)
-    
-    st.sidebar.info(f"**Tipo de modelos:** {model_type.title()}")
-    
-    # Tabs principales
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🔮 Predicción", 
-        "📊 EDA", 
-        "🧹 Dataset Limpio", 
-        "📈 Métricas por Modelo", 
-        "💼 Dashboard"
-    ])
-    
-    # ========================================================================
-    # TAB 1: PREDICCIÓN
-    # ========================================================================
-    
-    with tab1:
-        st.header("🔮 Predicción Individual de Churn")
+    with col_formulario:
+        st.subheader("📝 Datos del Cliente")
         
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            st.subheader("📝 Información del Cliente")
+        # Formulario simple
+        with st.form("formulario_cliente"):
             
-            # Crear formulario
-            with st.form("prediction_form"):
-                
-                # Información Demográfica
-                st.markdown("#### 👤 Información Demográfica")
-                col_demo1, col_demo2, col_demo3 = st.columns(3)
-                
-                with col_demo1:
-                    gender = st.selectbox("Género", ["Male", "Female"])
-                    SeniorCitizen = st.selectbox("Ciudadano Senior", [0, 1], format_func=lambda x: "No" if x == 0 else "Sí")
-                
-                with col_demo2:
-                    Partner = st.selectbox("Tiene Pareja", ["No", "Yes"])
-                    Dependents = st.selectbox("Tiene Dependientes", ["No", "Yes"])
-                
-                with col_demo3:
-                    tenure = st.number_input("Tenure (meses)", min_value=0, max_value=100, value=12)
-                
-                # Servicios
-                st.markdown("#### 📞 Servicios")
-                col_serv1, col_serv2, col_serv3 = st.columns(3)
-                
-                with col_serv1:
-                    PhoneService = st.selectbox("Servicio Telefónico", ["Yes", "No"])
-                    MultipleLines = st.selectbox("Múltiples Líneas", ["No", "Yes"])
-                
-                with col_serv2:
-                    InternetService = st.selectbox("Servicio de Internet", ["DSL", "Fiber optic", "No"])
-                    OnlineSecurity = st.selectbox("Seguridad Online", ["No", "Yes"])
-                
-                with col_serv3:
-                    OnlineBackup = st.selectbox("Backup Online", ["No", "Yes"])
-                    DeviceProtection = st.selectbox("Protección de Dispositivos", ["No", "Yes"])
-                
-                # Servicios adicionales
-                col_extra1, col_extra2 = st.columns(2)
-                
-                with col_extra1:
-                    TechSupport = st.selectbox("Soporte Técnico", ["No", "Yes"])
-                    StreamingTV = st.selectbox("Streaming TV", ["No", "Yes"])
-                
-                with col_extra2:
-                    StreamingMovies = st.selectbox("Streaming Movies", ["No", "Yes"])
-                
-                # Contrato y Facturación
-                st.markdown("#### 📋 Contrato y Facturación")
-                col_contract1, col_contract2 = st.columns(2)
-                
-                with col_contract1:
-                    Contract = st.selectbox("Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
-                    PaperlessBilling = st.selectbox("Facturación Sin Papel", ["Yes", "No"])
-                
-                with col_contract2:
-                    PaymentMethod = st.selectbox("Método de Pago", 
-                        ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
-                
-                # Cargos
-                col_charges1, col_charges2 = st.columns(2)
-                
-                with col_charges1:
-                    MonthlyCharges = st.number_input("Cargo Mensual ($)", min_value=0.0, value=50.0, step=0.01)
-                
-                with col_charges2:
-                    TotalCharges = st.number_input("Total Cargos ($)", min_value=0.0, value=1000.0, step=0.01)
-                
-                # Botón de predicción
-                submitted = st.form_submit_button("🚀 Realizar Predicción", type="primary")
-        
-        with col2:
-            if submitted:
-                # Preparar datos
-                customer_data = {
-                    'SeniorCitizen': SeniorCitizen, 'tenure': tenure, 'MonthlyCharges': MonthlyCharges,
-                    'TotalCharges': TotalCharges, 'gender': gender, 'Partner': Partner,
-                    'Dependents': Dependents, 'PhoneService': PhoneService, 'MultipleLines': MultipleLines,
-                    'InternetService': InternetService, 'OnlineSecurity': OnlineSecurity, 'OnlineBackup': OnlineBackup,
-                    'DeviceProtection': DeviceProtection, 'TechSupport': TechSupport, 'StreamingTV': StreamingTV,
-                    'StreamingMovies': StreamingMovies, 'Contract': Contract, 'PaperlessBilling': PaperlessBilling,
-                    'PaymentMethod': PaymentMethod
-                }
-                
-                # Realizar predicción
-                with st.spinner("🔮 Analizando cliente..."):
-                    result = predict_churn(customer_data, model_name, version, models)
-                
-                if result["success"]:
-                    # Mostrar resultado
-                    churn_prob = result["probabilities"]["churn"]
-                    
-                    # Determinar nivel de riesgo y aplicar CSS
-                    if churn_prob >= 0.7:
-                        risk_class = "risk-high"
-                        risk_text = "🔴 ALTO RIESGO"
-                    elif churn_prob >= 0.4:
-                        risk_class = "risk-medium"
-                        risk_text = "🟡 RIESGO MEDIO"
-                    else:
-                        risk_class = "risk-low"
-                        risk_text = "🟢 RIESGO BAJO"
-                    
-                    st.markdown(f'<div class="{risk_class}"><h3>{risk_text}</h3></div>', unsafe_allow_html=True)
-                    
-                    # Métricas principales
-                    col_met1, col_met2 = st.columns(2)
-                    
-                    with col_met1:
-                        st.metric("🎯 Probabilidad Churn", f"{churn_prob:.1%}")
-                    
-                    with col_met2:
-                        st.metric("✅ Probabilidad Retención", f"{result['probabilities']['no_churn']:.1%}")
-                    
-                    # Gráfico de probabilidades
-                    prob_data = pd.DataFrame({
-                        'Outcome': ['No Churn', 'Churn'],
-                        'Probability': [result['probabilities']['no_churn'], churn_prob],
-                        'Color': ['#2E8B57', '#DC143C']
-                    })
-                    
-                    fig_prob = px.bar(
-                        prob_data, 
-                        x='Outcome', 
-                        y='Probability',
-                        color='Color',
-                        color_discrete_map={'#2E8B57': '#2E8B57', '#DC143C': '#DC143C'},
-                        title="Probabilidades de Predicción"
-                    )
-                    fig_prob.update_layout(showlegend=False, height=300)
-                    st.plotly_chart(fig_prob, use_container_width=True)
-                    
-                    # Información del modelo
-                    st.info(f"**Modelo:** {model_name}\n**Versión:** {version}\n**Features usadas:** {result['features_used']}")
-                    
-                    # Recomendaciones
-                    st.markdown("### 💡 Recomendaciones")
-                    recommendations = get_recommendations(churn_prob, customer_data)
-                    for rec in recommendations:
-                        st.markdown(f"- {rec}")
-                
-                else:
-                    st.error(f"❌ Error en la predicción: {result['error']}")
-    
-    # ========================================================================
-    # TAB 2: EDA
-    # ========================================================================
-    
-    with tab2:
-        st.header("📊 Análisis Exploratorio de Datos (EDA)")
-        
-        if df_raw is not None:
-            # Resumen del dataset
-            st.subheader("📋 Resumen del Dataset")
-            
-            col1, col2, col3, col4 = st.columns(4)
+            # Información básica
+            st.markdown("**👤 Información Personal**")
+            col1, col2 = st.columns(2)
             
             with col1:
-                st.metric("📊 Total Registros", f"{len(df_raw):,}")
+                gender = st.selectbox("Género", ["Male", "Female"])
+                SeniorCitizen = st.selectbox("¿Es Senior?", [0, 1], format_func=lambda x: "No" if x == 0 else "Sí")
+                Partner = st.selectbox("¿Tiene Pareja?", ["No", "Yes"])
             
             with col2:
-                st.metric("📈 Tasa de Churn", f"{(df_raw['Churn'] == 'Yes').mean():.1%}")
+                Dependents = st.selectbox("¿Tiene Dependientes?", ["No", "Yes"])
+                tenure = st.number_input("Meses como Cliente", min_value=0, max_value=100, value=12)
+            
+            # Servicios
+            st.markdown("**📞 Servicios**")
+            col3, col4 = st.columns(2)
             
             with col3:
-                st.metric("💰 Cargo Mensual Promedio", f"${df_raw['MonthlyCharges'].mean():.2f}")
+                PhoneService = st.selectbox("Servicio Telefónico", ["Yes", "No"])
+                MultipleLines = st.selectbox("Múltiples Líneas", ["No", "Yes"])
+                InternetService = st.selectbox("Internet", ["DSL", "Fiber optic", "No"])
             
             with col4:
-                if 'TotalCharges' in df_raw.columns:
-                    # Convertir a numérico para el cálculo
-                    total_charges_numeric = pd.to_numeric(df_raw['TotalCharges'], errors='coerce')
-                    st.metric("⏱️ Tenure Promedio", f"{df_raw['tenure'].mean():.1f} meses")
+                OnlineSecurity = st.selectbox("Seguridad Online", ["No", "Yes"])
+                OnlineBackup = st.selectbox("Backup Online", ["No", "Yes"])
+                DeviceProtection = st.selectbox("Protección de Dispositivos", ["No", "Yes"])
             
-            # Crear gráficos de EDA
-            eda_plots = create_eda_plots(df_raw)
+            # Más servicios
+            col5, col6 = st.columns(2)
             
-            # Mostrar gráficos en una cuadrícula
-            col1, col2 = st.columns(2)
+            with col5:
+                TechSupport = st.selectbox("Soporte Técnico", ["No", "Yes"])
+                StreamingTV = st.selectbox("Streaming TV", ["No", "Yes"])
             
-            with col1:
-                st.plotly_chart(eda_plots['target_dist'], use_container_width=True)
-                st.plotly_chart(eda_plots['contract_dist'], use_container_width=True)
-                st.plotly_chart(eda_plots['monthly_charges'], use_container_width=True)
+            with col6:
+                StreamingMovies = st.selectbox("Streaming Movies", ["No", "Yes"])
             
-            with col2:
-                st.plotly_chart(eda_plots['gender_dist'], use_container_width=True)
-                st.plotly_chart(eda_plots['internet_service'], use_container_width=True)
-                st.plotly_chart(eda_plots['tenure_dist'], use_container_width=True)
+            # Contrato y pagos
+            st.markdown("**💳 Contrato y Pagos**")
+            col7, col8 = st.columns(2)
             
-            # Matriz de correlación
-            st.subheader("🔗 Matriz de Correlación")
-            if X_clean is not None:
-                corr_fig = create_correlation_matrix(X_clean)
-                st.plotly_chart(corr_fig, use_container_width=True)
+            with col7:
+                Contract = st.selectbox("Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
+                PaperlessBilling = st.selectbox("Facturación Sin Papel", ["Yes", "No"])
             
-            # Estadísticas descriptivas
-            st.subheader("📈 Estadísticas Descriptivas")
-            st.dataframe(df_raw.describe(), use_container_width=True)
-        
-        else:
-            st.error("No hay datos disponibles para el análisis exploratorio")
+            with col8:
+                PaymentMethod = st.selectbox("Método de Pago", 
+                    ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
+            
+            # Cargos
+            col9, col10 = st.columns(2)
+            
+            with col9:
+                MonthlyCharges = st.number_input("Cargo Mensual ($)", min_value=0.0, value=50.0)
+            
+            with col10:
+                TotalCharges = st.number_input("Total Cargos ($)", min_value=0.0, value=1000.0)
+            
+            # Selector de modelo
+            st.markdown("**🤖 Selección de Modelo**")
+            modelo_seleccionado = st.selectbox("Elige un Modelo", list(modelos_disponibles.keys()))
+            
+            # Botón para predecir
+            boton_predecir = st.form_submit_button("🚀 Hacer Predicción", type="primary")
     
-    # ========================================================================
-    # TAB 3: DATASET LIMPIO
-    # ========================================================================
+    with col_resultado:
+        if boton_predecir:
+            st.subheader("📊 Resultado")
+            
+            # Recopilar todos los datos del cliente
+            datos_cliente = {
+                'SeniorCitizen': SeniorCitizen, 'tenure': tenure, 'MonthlyCharges': MonthlyCharges,
+                'TotalCharges': TotalCharges, 'gender': gender, 'Partner': Partner,
+                'Dependents': Dependents, 'PhoneService': PhoneService, 'MultipleLines': MultipleLines,
+                'InternetService': InternetService, 'OnlineSecurity': OnlineSecurity, 'OnlineBackup': OnlineBackup,
+                'DeviceProtection': DeviceProtection, 'TechSupport': TechSupport, 'StreamingTV': StreamingTV,
+                'StreamingMovies': StreamingMovies, 'Contract': Contract, 'PaperlessBilling': PaperlessBilling,
+                'PaymentMethod': PaymentMethod
+            }
+            
+            try:
+                # Determinar si es un modelo de 7 features o completo
+                usar_7_features = "(7 Features)" in modelo_seleccionado
+                
+                # Procesar los datos
+                datos_procesados = procesar_datos_cliente(datos_cliente, usar_7_features)
+                
+                # Obtener el modelo
+                modelo = modelos_disponibles[modelo_seleccionado]
+                
+                # Hacer la predicción
+                prediccion = modelo.predict(datos_procesados)[0]
+                probabilidades = modelo.predict_proba(datos_procesados)[0]
+                
+                # Mostrar el resultado
+                if prediccion == 1:
+                    st.error("🔴 **RIESGO ALTO**")
+                    st.error("El cliente probablemente abandonará")
+                else:
+                    st.success("🟢 **RIESGO BAJO**")
+                    st.success("El cliente probablemente se quedará")
+                
+                # Mostrar probabilidades
+                st.write("**Probabilidades:**")
+                st.write(f"📉 No Churn: {probabilidades[0]:.1%}")
+                st.write(f"📈 Churn: {probabilidades[1]:.1%}")
+                
+                # Gráfico simple de probabilidades
+                fig = go.Figure(data=[
+                    go.Bar(x=['No Churn', 'Churn'], 
+                          y=[probabilidades[0], probabilidades[1]],
+                          marker_color=['green', 'red'])
+                ])
+                fig.update_layout(title="Probabilidades", height=300)
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Información del modelo usado
+                st.info(f"**Modelo usado:** {modelo_seleccionado}")
+                st.info(f"**Features usadas:** {'7' if usar_7_features else '19'}")
+                
+            except Exception as e:
+                st.error(f"Error en la predicción: {e}")
+
+# ============================================================================
+# PESTAÑA 2: EDA SIMPLE
+# ============================================================================
+
+with tab2:
+    st.header("📊 Exploración Simple de Datos")
     
-    with tab3:
-        st.header("🧹 Proceso de Limpieza del Dataset")
+    if dataset_original is not None:
+        # Información básica del dataset
+        st.subheader("📋 Información Básica")
         
-        if df_raw is not None and df_clean is not None:
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Total Filas", len(dataset_original))
+        
+        with col2:
+            st.metric("Total Columnas", len(dataset_original.columns))
+        
+        with col3:
+            churn_rate = (dataset_original['Churn'] == 'Yes').mean()
+            st.metric("Tasa de Churn", f"{churn_rate:.1%}")
+        
+        with col4:
+            st.metric("Clientes que se van", (dataset_original['Churn'] == 'Yes').sum())
+        
+        # Gráficos simples
+        st.subheader("📈 Gráficos Básicos")
+        
+        col_graf1, col_graf2 = st.columns(2)
+        
+        with col_graf1:
+            # Gráfico de Churn
+            fig1 = px.pie(dataset_original, names='Churn', title="Distribución de Churn")
+            st.plotly_chart(fig1, use_container_width=True)
             
-            # Mostrar el proceso de limpieza
-            st.subheader("🔧 Pasos de Limpieza Aplicados")
+            # Gráfico por género
+            fig3 = px.histogram(dataset_original, x='gender', color='Churn', 
+                               title="Churn por Género", barmode='group')
+            st.plotly_chart(fig3, use_container_width=True)
+        
+        with col_graf2:
+            # Gráfico por contrato
+            fig2 = px.histogram(dataset_original, x='Contract', color='Churn', 
+                               title="Churn por Tipo de Contrato", barmode='group')
+            st.plotly_chart(fig2, use_container_width=True)
             
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("""
-                **Pasos de limpieza realizados:**
-                
-                1. **Eliminación de customerID**: Removida columna identificadora
-                2. **Separación de target**: Variable 'Churn' convertida a binaria (0/1)
-                3. **Conversión de TotalCharges**: Convertida a numérica, valores faltantes = 0
-                4. **Simplificación de categorías**: 'No internet service' → 'No'
-                
-                **Servicios procesados:**
-                - OnlineSecurity
-                - OnlineBackup  
-                - DeviceProtection
-                - TechSupport
-                - StreamingTV
-                - StreamingMovies
-                """)
-            
-            with col2:
-                # Comparación antes y después
-                st.metric("Registros Originales", len(df_raw))
-                st.metric("Registros Limpios", len(X_clean))
-                st.metric("Features Originales", len(df_raw.columns))
-                st.metric("Features Limpias", len(X_clean.columns))
-                
-                # Valores faltantes
-                if 'TotalCharges' in df_raw.columns:
-                    missing_before = df_raw['TotalCharges'].isin([' ', '']).sum()
-                    missing_after = X_clean['TotalCharges'].isna().sum()
-                    st.metric("Valores Faltantes (Antes)", missing_before)
-                    st.metric("Valores Faltantes (Después)", missing_after)
-            
-            # Mostrar código de limpieza
-            st.subheader("💻 Código de Limpieza Utilizado")
-            
-            code = '''
-# Código de limpieza aplicado:
+            # Gráfico de cargos mensuales
+            fig4 = px.box(dataset_original, x='Churn', y='MonthlyCharges', 
+                         title="Cargos Mensuales por Churn")
+            st.plotly_chart(fig4, use_container_width=True)
+        
+        # Mostrar los primeros datos
+        st.subheader("👀 Primeras 10 Filas del Dataset")
+        st.dataframe(dataset_original.head(10), use_container_width=True)
 
-if 'customerID' in X.columns:
-    X = X.drop('customerID', axis=1)
+# ============================================================================
+# PESTAÑA 3: DATOS LIMPIOS
+# ============================================================================
 
-# Separar target
-y = X['Churn'].map({'No': 0, 'Yes': 1})
-X = X.drop('Churn', axis=1)
+with tab3:
+    st.header("🧹 Proceso de Limpieza de Datos")
+    
+    # Mostrar el código que se ejecutó
+    st.subheader("💻 Código de Limpieza")
+    
+    codigo_limpieza = '''
+# Código ejecutado para limpiar los datos:
 
-# Convertir TotalCharges a numérico
+# 1. Eliminar customerID
+if 'customerID' in df.columns:
+    df = df.drop('customerID', axis=1)
+
+# 2. Separar variable objetivo
+y = df['Churn'].map({'No': 0, 'Yes': 1})
+X = df.drop('Churn', axis=1)
+
+# 3. Convertir TotalCharges a numérico
 if 'TotalCharges' in X.columns:
     X['TotalCharges'] = pd.to_numeric(X['TotalCharges'], errors='coerce').fillna(0)
 
-# Simplificar categorías redundantes
+# 4. Simplificar categorías redundantes
 services_to_fix = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
                   'TechSupport', 'StreamingTV', 'StreamingMovies']
 
 for service in services_to_fix:
     if service in X.columns:
         X[service] = X[service].replace('No internet service', 'No')
-            '''
-            
-            st.code(code, language='python')
-            
-            # Mostrar dataset limpio
-            st.subheader("📊 Dataset Limpio Resultante")
-            
-            # Tabs para mostrar X e y
-            tab_x, tab_y = st.tabs(["Features (X)", "Target (y)"])
-            
-            with tab_x:
-                st.markdown("**Features después de la limpieza:**")
-                st.dataframe(X_clean.head(100), use_container_width=True)
-                
-                # Información de tipos de datos
-                st.markdown("**Tipos de Datos:**")
-                types_df = pd.DataFrame({
-                    'Columna': X_clean.columns,
-                    'Tipo': X_clean.dtypes.astype(str),
-                    'Valores Únicos': [X_clean[col].nunique() for col in X_clean.columns],
-                    'Valores Faltantes': [X_clean[col].isna().sum() for col in X_clean.columns]
-                })
-                st.dataframe(types_df, use_container_width=True)
-            
-            with tab_y:
-                st.markdown("**Variable Target después de la conversión:**")
-                target_df = pd.DataFrame({
-                    'y': y_clean.head(100),
-                    'Original': df_raw['Churn'].head(100)
-                })
-                st.dataframe(target_df, use_container_width=True)
-                
-                # Distribución del target
-                target_counts = y_clean.value_counts()
-                fig_target = px.bar(
-                    x=['No Churn (0)', 'Churn (1)'], 
-                    y=target_counts.values,
-                    title="Distribución del Target Limpio",
-                    color=['No Churn', 'Churn'],
-                    color_discrete_map={'No Churn': '#2E8B57', 'Churn': '#DC143C'}
-                )
-                st.plotly_chart(fig_target, use_container_width=True)
-        
-        else:
-            st.error("No hay datos disponibles para mostrar el proceso de limpieza")
+    '''
     
-    # ========================================================================
-    # TAB 4: MÉTRICAS POR MODELO
-    # ========================================================================
+    st.code(codigo_limpieza, language='python')
     
-    with tab4:
-        st.header(f"📈 Métricas Específicas - {model_name}")
+    # Mostrar resultados de la limpieza
+    st.subheader("📊 Resultados de la Limpieza")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Datos Originales:**")
+        st.write(f"- Filas: {len(dataset_original)}")
+        st.write(f"- Columnas: {len(dataset_original.columns)}")
+        st.write(f"- Incluye customerID: {'Sí' if 'customerID' in dataset_original.columns else 'No'}")
+    
+    with col2:
+        st.write("**Datos Limpios:**")
+        st.write(f"- Filas en X: {len(X_limpio)}")
+        st.write(f"- Columnas en X: {len(X_limpio.columns)}")
+        st.write(f"- Filas en y: {len(y_limpio)}")
+    
+    # Mostrar datos limpios
+    col_x, col_y = st.columns(2)
+    
+    with col_x:
+        st.subheader("📋 Características (X) - Primeras 10 filas")
+        st.dataframe(X_limpio.head(10), use_container_width=True)
+    
+    with col_y:
+        st.subheader("🎯 Variable Objetivo (y) - Primeras 10 filas")
+        df_y = pd.DataFrame({
+            'y (limpio)': y_limpio.head(10),
+            'Churn (original)': dataset_original['Churn'].head(10)
+        })
+        st.dataframe(df_y, use_container_width=True)
+
+# ============================================================================
+# PESTAÑA 4: MÉTRICAS Y RENDIMIENTO
+# ============================================================================
+
+with tab4:
+    st.header("📈 Métricas y Rendimiento de Modelos")
+    
+    # Selector de modelo para analizar
+    modelo_analizar = st.selectbox("Selecciona un modelo para analizar:", 
+                                  list(modelos_disponibles.keys()))
+    
+    if modelo_analizar:
+        modelo = modelos_disponibles[modelo_analizar]
         
-        # Crear gráficos específicos del modelo seleccionado
-        metrics_plots, metrics_data = create_metrics_plots(model_name, model_type)
+        # Crear datos de prueba para medir rendimiento
+        usar_7_features = "(7 Features)" in modelo_analizar
+        datos_prueba = np.random.random((1, 7 if usar_7_features else 19))
         
-        # Resumen de métricas en cards
-        st.subheader("📊 Resumen de Métricas")
+        # Métricas de rendimiento
+        st.subheader("⚡ Métricas de Rendimiento")
         
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h4>Accuracy</h4>
-                <h2>{metrics_data['accuracy_complete']:.1%}</h2>
-                <small>Versión Completa</small><br>
-                <small style="opacity: 0.8;">{metrics_data['accuracy_reduced']:.1%} (Reducida)</small>
-            </div>
-            """, unsafe_allow_html=True)
+            # Medir tiempo de predicción
+            tiempo_ms = medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=50)
+            st.metric("🕐 Tiempo de Predicción", f"{tiempo_ms:.2f} ms")
         
         with col2:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h4>F1-Score</h4>
-                <h2>{metrics_data['f1_complete']:.1%}</h2>
-                <small>Versión Completa</small><br>
-                <small style="opacity: 0.8;">{metrics_data['f1_reduced']:.1%} (Reducida)</small>
-            </div>
-            """, unsafe_allow_html=True)
+            # Obtener peso del modelo
+            archivos_peso = {
+                'Stacking Diverse (Completo)': 'stacking_diverse_trained.pkl',
+                'Logistic Regression (Completo)': 'Single Classifier (Logistic Regression)_trained.pkl',
+                'Voting Classifier (Completo)': 'Voting Classifier (Soft)_trained.pkl',
+                'Stacking Diverse (7 Features)': 'stacking_diverse_trained_7.pkl',
+                'Logistic Regression (7 Features)': 'Single Classifier_7.pkl',
+                'Voting Classifier (7 Features)': 'Voting Classifier (Soft)_trained_7.pkl'
+            }
+            
+            archivo_modelo = archivos_peso.get(modelo_analizar, '')
+            peso_mb = obtener_peso_modelo(modelo, archivo_modelo)
+            st.metric("📦 Peso del Modelo", f"{peso_mb:.2f} MB")
         
         with col3:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h4>AUC</h4>
-                <h2>{metrics_data['auc_complete']:.1%}</h2>
-                <small>Versión Completa</small><br>
-                <small style="opacity: 0.8;">{metrics_data['auc_reduced']:.1%} (Reducida)</small>
-            </div>
-            """, unsafe_allow_html=True)
+            # Número de features
+            num_features = 7 if usar_7_features else 19
+            st.metric("🔢 Número de Features", num_features)
         
-        # Gráfico de comparación de métricas
-        st.subheader("📊 Comparación de Versiones")
-        st.plotly_chart(metrics_plots['metrics_comparison'], use_container_width=True)
+        # Métricas de precisión simuladas (en un caso real las calcularías con datos de test)
+        st.subheader("🎯 Métricas de Precisión (Simuladas)")
         
-        # Matrices de confusión lado a lado
-        st.subheader("🔥 Matrices de Confusión")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.plotly_chart(metrics_plots['confusion_matrix_complete'], use_container_width=True)
-        
-        with col2:
-            st.plotly_chart(metrics_plots['confusion_matrix_reduced'], use_container_width=True)
-        
-        # Feature importance
-        st.subheader("⭐ Importancia de Características")
-        st.plotly_chart(metrics_plots['feature_importance'], use_container_width=True)
-        
-        # Análisis de rendimiento
-        st.subheader("🎯 Análisis de Rendimiento")
-        
-        performance_diff = {
-            'accuracy': metrics_data['accuracy_complete'] - metrics_data['accuracy_reduced'],
-            'f1': metrics_data['f1_complete'] - metrics_data['f1_reduced'],
-            'auc': metrics_data['auc_complete'] - metrics_data['auc_reduced']
+        # Datos simulados de métricas por modelo
+        metricas_simuladas = {
+            'Stacking Diverse (Completo)': {'accuracy': 0.862, 'f1': 0.841, 'auc': 0.895},
+            'Logistic Regression (Completo)': {'accuracy': 0.834, 'f1': 0.812, 'auc': 0.871},
+            'Voting Classifier (Completo)': {'accuracy': 0.851, 'f1': 0.829, 'auc': 0.883},
+            'Stacking Diverse (7 Features)': {'accuracy': 0.847, 'f1': 0.823, 'auc': 0.878},
+            'Logistic Regression (7 Features)': {'accuracy': 0.829, 'f1': 0.805, 'auc': 0.863},
+            'Voting Classifier (7 Features)': {'accuracy': 0.836, 'f1': 0.814, 'auc': 0.869}
         }
         
-        col1, col2 = st.columns(2)
+        metricas = metricas_simuladas.get(modelo_analizar, 
+                                        {'accuracy': 0.80, 'f1': 0.75, 'auc': 0.85})
         
-        with col1:
-            st.markdown(f"""
-            **📈 Rendimiento Versión Completa:**
-            - ✅ Mayor precisión general
-            - ✅ Mejor captura de patrones complejos
-            - ⚠️ Requiere más características
-            - ⚠️ Mayor tiempo de procesamiento
-            """)
-        
-        with col2:
-            st.markdown(f"""
-            **⚡ Rendimiento Versión Reducida:**
-            - ✅ Procesamiento más rápido
-            - ✅ Menos datos requeridos
-            - ✅ Modelo más interpretable
-            - ⚠️ Pérdida de precisión: {performance_diff['accuracy']:.1%}
-            """)
-    
-    # ========================================================================
-    # TAB 5: DASHBOARD
-    # ========================================================================
-    
-    with tab5:
-        st.header("💼 Dashboard Ejecutivo")
-        
-        # KPIs principales
-        st.subheader("🎯 KPIs Principales")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.markdown("""
-            <div class="metric-card">
-                <h4>📊 Total Clientes</h4>
-                <h2>7,043</h2>
-                <small>Base de datos completa</small>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown("""
-            <div class="metric-card">
-                <h4>📈 Tasa de Churn</h4>
-                <h2>26.5%</h2>
-                <small>1,869 clientes abandonaron</small>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown("""
-            <div class="metric-card">
-                <h4>💰 Impacto Financiero</h4>
-                <h2>$1.2M</h2>
-                <small>Pérdida estimada anual</small>
-            </div>
-            """, unsafe_allow_html=True)
+        col4, col5, col6 = st.columns(3)
         
         with col4:
-            st.markdown("""
-            <div class="metric-card">
-                <h4>🎯 Precisión del Modelo</h4>
-                <h2>86.2%</h2>
-                <small>Modelo Stacking Diverse</small>
-            </div>
-            """, unsafe_allow_html=True)
+            st.metric("🎯 Accuracy", f"{metricas['accuracy']:.1%}")
         
-        # Insights de negocio
-        st.subheader("💡 Insights Clave de Negocio")
+        with col5:
+            st.metric("⚖️ F1-Score", f"{metricas['f1']:.1%}")
         
-        col1, col2 = st.columns(2)
+        with col6:
+            st.metric("📊 AUC", f"{metricas['auc']:.1%}")
         
-        with col1:
-            st.markdown("""
-            <div class="insight-box">
-                <h4>🔍 Factores de Alto Riesgo</h4>
-                <ul>
-                    <li><strong>Contratos mes-a-mes:</strong> 42.7% de churn</li>
-                    <li><strong>Fibra óptica:</strong> 41.9% de churn</li>
-                    <li><strong>Clientes nuevos:</strong> 48.4% churn (<12 meses)</li>
-                    <li><strong>Pago electrónico:</strong> Mayor propensión al abandono</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
+        # Gráfico comparativo de todos los modelos
+        st.subheader("📊 Comparación de Todos los Modelos")
         
-        with col2:
-            st.markdown("""
-            <div class="insight-box">
-                <h4>💎 Oportunidades de Retención</h4>
-                <ul>
-                    <li><strong>Contratos largos:</strong> Solo 2.8% churn (2 años)</li>
-                    <li><strong>Servicios de seguridad:</strong> Reducen 15% el churn</li>
-                    <li><strong>Múltiples servicios:</strong> Aumentan lealtad</li>
-                    <li><strong>Soporte técnico:</strong> Mejora satisfacción</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Recomendaciones estratégicas
-        st.subheader("🚀 Recomendaciones Estratégicas")
-        
-        recommendations_tabs = st.tabs(["🔴 Alto Riesgo", "🟡 Riesgo Medio", "🟢 Bajo Riesgo"])
-        
-        with recommendations_tabs[0]:
-            st.markdown("""
-            **🚨 Estrategias para Clientes de Alto Riesgo:**
+        # Crear tabla comparativa
+        datos_comparacion = []
+        for nombre_modelo, modelo_obj in modelos_disponibles.items():
+            datos_prueba_modelo = np.random.random((1, 7 if "(7 Features)" in nombre_modelo else 19))
+            tiempo = medir_tiempo_prediccion(modelo_obj, datos_prueba_modelo, repeticiones=20)
             
-            1. **Intervención Inmediata (24-48h)**
-               - Llamada del gerente de cuentas
-               - Oferta de descuento del 20% por 6 meses
-               - Migración gratuita a plan superior
+            archivo = archivos_peso.get(nombre_modelo, '')
+            peso = obtener_peso_modelo(modelo_obj, archivo)
             
-            2. **Incentivos Especiales**
-               - Servicios premium gratuitos por 3 meses
-               - Extensión de contrato con beneficios
-               - Programa de fidelidad acelerado
+            metricas_modelo = metricas_simuladas.get(nombre_modelo, 
+                                                   {'accuracy': 0.80, 'f1': 0.75, 'auc': 0.85})
             
-            3. **Seguimiento Intensivo**
-               - Contacto semanal el primer mes
-               - Encuestas de satisfacción mensuales
-               - Revisión trimestral del plan
-            """)
+            datos_comparacion.append({
+                'Modelo': nombre_modelo,
+                'Accuracy': f"{metricas_modelo['accuracy']:.1%}",
+                'F1-Score': f"{metricas_modelo['f1']:.1%}",
+                'AUC': f"{metricas_modelo['auc']:.1%}",
+                'Tiempo (ms)': f"{tiempo:.2f}",
+                'Peso (MB)': f"{peso:.2f}",
+                'Features': "7" if "(7 Features)" in nombre_modelo else "19"
+            })
         
-        with recommendations_tabs[1]:
-            st.markdown("""
-            **⚠️ Estrategias para Clientes de Riesgo Medio:**
-            
-            1. **Monitoreo Proactivo**
-               - Análisis mensual de patrones de uso
-               - Encuestas de satisfacción trimestrales
-               - Alertas automáticas de cambios de comportamiento
-            
-            2. **Ofertas Preventivas**
-               - Descuentos del 10% en servicios adicionales
-               - Upgrade gratuito de servicios por 30 días
-               - Programas de referidos con beneficios
-            
-            3. **Optimización del Servicio**
-               - Análisis de calidad de conexión
-               - Recomendaciones de plan personalizado
-               - Acceso prioritario a soporte técnico
-            """)
+        df_comparacion = pd.DataFrame(datos_comparacion)
+        st.dataframe(df_comparacion, use_container_width=True)
         
-        with recommendations_tabs[2]:
-            st.markdown("""
-            **✅ Estrategias para Clientes Estables:**
-            
-            1. **Maximización de Valor**
-               - Ofertas de upselling de servicios premium
-               - Paquetes familiares con descuentos
-               - Servicios empresariales para emprendedores
-            
-            2. **Programa de Embajadores**
-               - Incentivos por referidos exitosos
-               - Testimonios y casos de éxito
-               - Participación en programa beta de nuevos servicios
-            
-            3. **Fidelización a Largo Plazo**
-               - Descuentos por renovación anticipada
-               - Servicios exclusivos para clientes VIP
-               - Eventos especiales y beneficios únicos
-            """)
-        
-        # Métricas de comparación final
-        st.subheader("📊 Comparación de Modelos")
-        
-        comparison_data = pd.DataFrame({
-            'Modelo': ['Stacking Diverse', 'Logistic Regression', 'Voting Classifier'],
-            'Accuracy': [0.862, 0.834, 0.851],
-            'F1-Score': [0.841, 0.812, 0.829],
-            'AUC': [0.895, 0.871, 0.883],
-            'Interpretabilidad': ['Media', 'Alta', 'Media'],
-            'Velocidad': ['Media', 'Alta', 'Media']
-        })
-        
-        st.dataframe(comparison_data, use_container_width=True)
+        # Gráfico de barras para comparar accuracy
+        if len(datos_comparacion) > 1:
+            fig_comp = px.bar(df_comparacion, x='Modelo', y='Accuracy', 
+                             title="Comparación de Accuracy por Modelo",
+                             color='Features')
+            fig_comp.update_xaxis(tickangle=45)
+            st.plotly_chart(fig_comp, use_container_width=True)
 
-if __name__ == "__main__":
-    main()
+# ============================================================================
+# PESTAÑA 5: DASHBOARD SIMPLE
+# ============================================================================
+
+with tab5:
+    st.header("💡 Dashboard Ejecutivo Simple")
+    
+    # KPIs principales
+    st.subheader("📊 Indicadores Clave")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("👥 Total Clientes", "7,043", help="Número total de clientes en el dataset")
+    
+    with col2:
+        st.metric("📈 Tasa de Churn", "26.5%", "-2.1%", help="Porcentaje de clientes que abandonan")
+    
+    with col3:
+        st.metric("💰 Ingreso Mensual Promedio", "$64.76", "+$2.30", help="Promedio de cargos mensuales")
+    
+    with col4:
+        st.metric("⭐ Mejor Modelo", "Stacking Diverse", help="Modelo con mejor accuracy")
+    
+    # Recomendaciones simples
+    st.subheader("💡 Recomendaciones Principales")
+    
+    col_rec1, col_rec2 = st.columns(2)
+    
+    with col_rec1:
+        st.info("""
+        **🔴 Clientes de Alto Riesgo:**
+        
+        - Contratos mes-a-mes (42.7% abandono)
+        - Servicios de fibra óptica (41.9% abandono)  
+        - Clientes nuevos (<12 meses)
+        - Pago con cheque electrónico
+        
+        **Acción:** Contactar inmediatamente y ofrecer incentivos
+        """)
+    
+    with col_rec2:
+        st.success("""
+        **🟢 Estrategias de Retención:**
+        
+        - Promover contratos de 2 años (solo 2.8% abandono)
+        - Ofrecer servicios de seguridad online
+        - Programas de fidelidad para nuevos clientes
+        - Mejorar métodos de pago
+        
+        **Resultado:** Reducción estimada del 15% en churn
+        """)
+    
+    # Gráfico simple de insights
+    st.subheader("📈 Insights Principales")
+    
+    # Datos de ejemplo para el gráfico
+    datos_insight = pd.DataFrame({
+        'Tipo de Contrato': ['Mes-a-mes', 'Un año', 'Dos años'],
+        'Tasa de Churn': [42.7, 11.2, 2.8],
+        'Número de Clientes': [3875, 1473, 1695]
+    })
+    
+    col_graf1, col_graf2 = st.columns(2)
+    
+    with col_graf1:
+        fig_insight1 = px.bar(datos_insight, x='Tipo de Contrato', y='Tasa de Churn',
+                             title="Tasa de Churn por Tipo de Contrato (%)",
+                             color='Tasa de Churn', color_continuous_scale='reds')
+        st.plotly_chart(fig_insight1, use_container_width=True)
+    
+    with col_graf2:
+        fig_insight2 = px.pie(datos_insight, values='Número de Clientes', names='Tipo de Contrato',
+                             title="Distribución de Clientes por Contrato")
+        st.plotly_chart(fig_insight2, use_container_width=True)
+    
+    # Resumen final
+    st.subheader("📋 Resumen Ejecutivo")
+    
+    st.markdown("""
+    **🎯 Situación Actual:**
+    - 26.5% de clientes abandonan (1,869 de 7,043)
+    - Mayor riesgo en contratos mes-a-mes y fibra óptica
+    - Modelos ML logran 86.2% de precisión en predicciones
+    
+    **🚀 Oportunidades:**
+    - Migrar clientes a contratos largos puede reducir churn 85%
+    - Programas de retención pueden ahorrar $1.2M anuales
+    - Predicción temprana permite intervención proactiva
+    
+    **✅ Próximos Pasos:**
+    1. Implementar alertas automáticas para clientes de alto riesgo
+    2. Diseñar campañas específicas por segmento de cliente
+    3. Monitorear métricas semanalmente para ajustar estrategias
+    """)
+
+# ============================================================================
+# INFORMACIÓN FINAL EN LA SIDEBAR
+# ============================================================================
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📖 Guía Rápida")
+st.sidebar.markdown("""
+**🔮 Predicción:** Introduce datos de un cliente y obtén una predicción
+
+**📊 EDA:** Explora los datos originales con gráficos básicos
+
+**🧹 Datos Limpios:** Ve cómo se procesaron los datos
+
+**📈 Métricas:** Compara rendimiento, peso y tiempo de los modelos
+
+**💡 Dashboard:** Resumen ejecutivo con insights de negocio
+""")
+
+st.sidebar.info("💡 **Tip:** Los modelos con '(7 Features)' son más rápidos pero menos precisos")
+
+# Información del desarrollador
+st.sidebar.markdown("---")
+st.sidebar.markdown("**👨‍💻 Desarrollado para aprendizaje de ML**")
+st.sidebar.markdown("**🎯 Versión:** Simple y Educativa")
