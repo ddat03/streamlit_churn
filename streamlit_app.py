@@ -15,14 +15,13 @@ warnings.filterwarnings('ignore')
 # ============================================================================
 
 st.set_page_config(
-    page_title="🔮 Predictor de Churn",
-    page_icon="🔮",
+    page_title="Predictor de Churn",
     layout="wide"
 )
 
 # Título principal
-st.title("🔮 Predictor de Churn de Clientes Telco")
-st.markdown("### Aplicación Simple de Machine Learning")
+st.title("Predictor de Churn de Clientes Telco")
+st.markdown("### Evaluacion Final Aprendizaje de Maquina")
 
 
 # ============================================================================
@@ -80,13 +79,13 @@ def limpiar_datos(df_original):
     # 1. Eliminar customerID si existe
     if 'customerID' in df.columns:
         df = df.drop('customerID', axis=1)
-        st.write("✅ CustomerID eliminado")
+        
     
     # 2. Separar la variable objetivo (y) de las características (X)
     if 'Churn' in df.columns:
         y = df['Churn'].map({'No': 0, 'Yes': 1})  # Convertir a números
         X = df.drop('Churn', axis=1)
-        st.write("✅ Variable objetivo separada y convertida a números")
+        
     else:
         st.error("❌ No se encontró la columna 'Churn' en el dataset")
         return None, None
@@ -94,7 +93,7 @@ def limpiar_datos(df_original):
     # 3. Convertir TotalCharges a números
     if 'TotalCharges' in X.columns:
         X['TotalCharges'] = pd.to_numeric(X['TotalCharges'], errors='coerce').fillna(0)
-        st.write("✅ TotalCharges convertido a números")
+        
     
     # 4. Simplificar categorías como me dijiste
     servicios_arreglar = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
@@ -104,7 +103,7 @@ def limpiar_datos(df_original):
         if servicio in X.columns:
             X[servicio] = X[servicio].replace('No internet service', 'No')
     
-    st.write("✅ Categorías simplificadas")
+    
     
     return X, y
 
@@ -138,7 +137,6 @@ def cargar_modelos():
         try:
             modelo = joblib.load(archivo)
             modelos[nombre_modelo] = modelo
-            st.write(f"✅ {nombre_modelo} cargado")
         except FileNotFoundError:
             errores.append(f"❌ No se encontró: {archivo}")
     
