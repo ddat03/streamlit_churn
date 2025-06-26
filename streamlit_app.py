@@ -353,7 +353,6 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             tenure                 
         ]
         
-        st.write(f"**🔍 Datos 19 features (sin scaler):** {datos_procesados}")
         
         return np.array(datos_procesados).reshape(1, -1)
 # Cargar el dataset
