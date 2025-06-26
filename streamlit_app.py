@@ -1,4 +1,4 @@
-import streamlit as st
+    import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
@@ -29,6 +29,7 @@ modelo_info = st.sidebar.selectbox(
 if modelo_info == "Stacking Classifier":
     st.sidebar.markdown("""
     **BASE CLASSIFIER:**
+    
     **RandomForestClassifier:**
     - max_depth=5 
     - max_features=None 
@@ -63,6 +64,7 @@ if modelo_info == "Single Classifier":
 if modelo_info == "Voting Classifier":
     st.sidebar.markdown("""
     **SOFT**
+    
     **XGBRegressor:**
     - n_estimators=100      
     - learning_rate=0.1
