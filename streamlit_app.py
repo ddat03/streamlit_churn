@@ -635,17 +635,13 @@ if dataset_original is not None or total_modelos > 0:
                         'Churn (original)': dataset_original['Churn'].head(10)
                     })
                     st.dataframe(df_y, use_container_width=True)
-#-----------------------------------------------
-    # ============================================================================
-    # PESTAÑA 4: MÉTRICAS Y RENDIMIENTO
-    # ============================================================================
 
-    # ============================================================================
-    # PESTAÑA 4: MÉTRICAS Y RENDIMIENTO CON VALORES PREDEFINIDOS
-    # ============================================================================
+    
+    # PESTAÑA 4: MÉTRICAS Y RENDIMIENTO
+    
 
     with tab4:
-        st.header("📈 Métricas y Rendimiento de Modelos")
+        st.header("Métricas")
         
         if total_modelos == 0:
             st.error("❌ No hay modelos disponibles para analizar")
@@ -694,8 +690,6 @@ if dataset_original is not None or total_modelos > 0:
                 }
             }
             
-            # Selector de tipo de características
-            st.subheader("🔧 Configuración de Análisis")
             tipo_analisis = st.selectbox(
                 "Selecciona el tipo de características:",
                 ["7 características más importantes", "Todas las características (19)"]
@@ -705,10 +699,9 @@ if dataset_original is not None or total_modelos > 0:
             metricas_actuales = metricas_7_features if usar_7_features else metricas_19_features
             num_features = "7" if usar_7_features else "19"
             
-            st.info(f"📊 Mostrando métricas para modelos con **{num_features} características**")
             
             # Tabla de métricas comparativa
-            st.subheader("📊 Tabla Comparativa de Métricas")
+            st.subheader("Tabla Comparativa de Métricas")
             
             # Preparar datos para la tabla
             datos_tabla = []
@@ -725,47 +718,8 @@ if dataset_original is not None or total_modelos > 0:
             df_metricas = pd.DataFrame(datos_tabla)
             st.dataframe(df_metricas, use_container_width=True)
             
-            # KPIs destacados
-            st.subheader("🏆 Métricas Destacadas")
-            
-            # Encontrar el mejor modelo por métrica
-            mejor_accuracy = max(metricas_actuales.items(), key=lambda x: x[1]['Accuracy'])
-            mejor_auc = max(metricas_actuales.items(), key=lambda x: x[1]['AUC'])
-            mejor_f1 = max(metricas_actuales.items(), key=lambda x: x[1]['F1-Score'])
-            mas_rapido = min(metricas_actuales.items(), key=lambda x: x[1]['Velocidad_ms'])
-            
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.metric(
-                    "🎯 Mejor Accuracy", 
-                    f"{mejor_accuracy[1]['Accuracy']:.1%}",
-                    delta=f"{mejor_accuracy[0]}"
-                )
-            
-            with col2:
-                st.metric(
-                    "📊 Mejor AUC", 
-                    f"{mejor_auc[1]['AUC']:.1%}",
-                    delta=f"{mejor_auc[0]}"
-                )
-            
-            with col3:
-                st.metric(
-                    "⚖️ Mejor F1-Score", 
-                    f"{mejor_f1[1]['F1-Score']:.1%}",
-                    delta=f"{mejor_f1[0]}"
-                )
-            
-            with col4:
-                st.metric(
-                    "⚡ Más Rápido", 
-                    f"{mas_rapido[1]['Velocidad_ms']:.1f} ms",
-                    delta=f"{mas_rapido[0]}"
-                )
-            
             # Gráficos comparativos
-            st.subheader("📈 Gráficos Comparativos")
+            st.subheader("Gráficos Comparativos")
             
             # Preparar datos para gráficos
             modelos = list(metricas_actuales.keys())
@@ -861,64 +815,7 @@ if dataset_original is not None or total_modelos > 0:
             
             st.plotly_chart(fig_radar, use_container_width=True)
             
-            # Análisis y recomendaciones
-            st.subheader("💡 Análisis y Recomendaciones")
             
-            col_analisis1, col_analisis2 = st.columns(2)
-            
-            with col_analisis1:
-                st.success(f"""
-                **🏆 Modelo Recomendado: {mejor_accuracy[0]}**
-                
-                **Fortalezas:**
-                - Accuracy: {mejor_accuracy[1]['Accuracy']:.1%}
-                - AUC: {mejor_accuracy[1]['AUC']:.1%}
-                - F1-Score: {mejor_accuracy[1]['F1-Score']:.1%}
-                - Velocidad: {mejor_accuracy[1]['Velocidad_ms']:.1f} ms
-                
-                **Mejor para:** Predicciones en producción donde la precisión es crítica
-                """)
-            
-            with col_analisis2:
-                st.info(f"""
-                **⚡ Alternativa Rápida: {mas_rapido[0]}**
-                
-                **Fortalezas:**
-                - Velocidad: {mas_rapido[1]['Velocidad_ms']:.1f} ms (más rápido)
-                - Accuracy: {mas_rapido[1]['Accuracy']:.1%}
-                - Simplicidad de implementación
-                
-                **Mejor para:** Aplicaciones en tiempo real con muchas predicciones
-                """)
-            
-            # Comparación entre 7 vs 19 características
-            st.subheader("🔄 Comparación: 7 vs 19 Características")
-            
-            if st.button("Ver comparación detallada 7 vs 19 características"):
-                # Crear tabla comparativa
-                comparacion_data = []
-                
-                for modelo in ['Stacking Diverse', 'MLP Classifier', 'Voting Classifier']:
-                    if modelo in metricas_7_features and modelo in metricas_19_features:
-                        comparacion_data.append({
-                            'Modelo': modelo,
-                            'Accuracy (7)': f"{metricas_7_features[modelo]['Accuracy']:.1%}",
-                            'Accuracy (19)': f"{metricas_19_features[modelo]['Accuracy']:.1%}",
-                            'AUC (7)': f"{metricas_7_features[modelo]['AUC']:.1%}",
-                            'AUC (19)': f"{metricas_19_features[modelo]['AUC']:.1%}",
-                            'Velocidad (7)': f"{metricas_7_features[modelo]['Velocidad_ms']:.1f} ms",
-                            'Velocidad (19)': f"{metricas_19_features[modelo]['Velocidad_ms']:.1f} ms"
-                        })
-                
-                df_comparacion = pd.DataFrame(comparacion_data)
-                st.dataframe(df_comparacion, use_container_width=True)
-                
-                st.markdown("""
-                **📋 Conclusiones:**
-                - **19 características:** Mejor accuracy general pero más lento
-                - **7 características:** Más rápido y eficiente con accuracy comparable
-                - **Recomendación:** Usar 7 características para producción, 19 para análisis detallado
-                """)
     
     # ============================================================================
     # PESTAÑA 5: DASHBOARD SIMPLE
