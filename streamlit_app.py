@@ -137,9 +137,7 @@ def cargar_modelo_especifico(modelo_base, num_features, modelos_disponibles):
 
 
 def obtener_peso_modelo(modelo, nombre_archivo):
-    """
-    Función para obtener el peso (tamaño) de un modelo
-    """
+
     try:
         tamaño_bytes = os.path.getsize(nombre_archivo)
         
@@ -264,11 +262,11 @@ if dataset_original is not None or total_modelos > 0:
     
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🔮 Predicción", 
-        "📊 EDA Simple", 
-        "🧹 Datos Limpios", 
-        "📈 Métricas y Rendimiento", 
-        "💡 Dashboard"
+        "Predicción", 
+        "EDA", 
+        "Datos Limpios", 
+        "Métricas y Rendimiento", 
+        "Dashboard"
     ])
 
     # PESTAÑA 1: PREDICCIÓN
@@ -493,7 +491,7 @@ if dataset_original is not None or total_modelos > 0:
     # ============================================================================
 
     with tab2:
-        st.header("📊 Exploración Simple de Datos")
+        st.header("Exploración de Datos")
         
         if dataset_original is None:
             st.error("❌ No hay dataset disponible para explorar")
@@ -518,7 +516,7 @@ if dataset_original is not None or total_modelos > 0:
                 st.metric("Clientes que se van", (dataset_original['Churn'] == 'Yes').sum())
             
             # Gráficos simples
-            st.subheader("📈 Gráficos Básicos")
+            st.subheader("📈 Gráficos")
             
             col_graf1, col_graf2 = st.columns(2)
             
@@ -544,15 +542,13 @@ if dataset_original is not None or total_modelos > 0:
                 st.plotly_chart(fig4, use_container_width=True)
             
             # Mostrar los primeros datos
-            st.subheader("👀 Primeras 10 Filas del Dataset")
+            st.subheader("Primeras 10 Filas del Dataset")
             st.dataframe(dataset_original.head(10), use_container_width=True)
 
-    # ============================================================================
     # PESTAÑA 3: DATOS LIMPIOS
-    # ============================================================================
 
     with tab3:
-        st.header("🧹 Proceso de Limpieza de Datos")
+        st.header("Limpieza de Datos")
         
         if dataset_original is None:
             st.error("❌ No hay dataset disponible para mostrar el proceso de limpieza")
