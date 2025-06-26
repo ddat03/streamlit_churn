@@ -576,27 +576,29 @@ if dataset_original is not None or total_modelos > 0:
                                  'Churn_num', 'gender_num', 'Partner_num', 'Dependents_num', 
                                  'PhoneService_num', 'PaperlessBilling_num']
             
-            # Calcular correlaciones con Churn
-            correlaciones = df_corr[columnas_numericas].corr()['Churn_num'].drop('Churn_num').sort_values(key=abs, ascending=False)
+            # Calcular matriz de correlación
+            correlacion = df_corr[columnas_numericas].corr()
             
-            # Crear gráfico de barras para correlaciones
-            fig_corr = go.Figure(data=[
-                go.Bar(
-                    x=correlaciones.values,
-                    y=correlaciones.index,
-                    orientation='h',
-                    marker_color=['red' if x < 0 else 'green' for x in correlaciones.values]
-                )
-            ])
-            
-            fig_corr.update_layout(
-                title="Correlación de Variables con Churn",
-                xaxis_title="Correlación",
-                yaxis_title="Variables",
-                height=500
+            # Crear heatmap con plotly
+            fig_heatmap = px.imshow(
+                correlacion,
+                text_auto=True,
+                color_continuous_scale='RdBu',
+                aspect='auto',
+                title='Matriz de Correlación'
             )
             
-            st.plotly_chart(fig_corr, use_container_width=True)
+            fig_heatmap.update_layout(
+                width=800,
+                height=600,
+                xaxis_title="Variables",
+                yaxis_title="Variables"
+            )
+            
+            # Rotar etiquetas del eje x
+            fig_heatmap.update_xaxes(tickangle=45)
+            
+            st.plotly_chart(fig_heatmap, use_container_width=True)
             # Mostrar resultados de la limpieza
             st.subheader("📊 Resultados de la Limpieza")
             
