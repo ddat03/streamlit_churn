@@ -865,6 +865,28 @@ if dataset_original is not None or total_modelos > 0:
                 )
             
             st.plotly_chart(fig_subplots, use_container_width=True)
+            # Datos de Feature Importance
+            features = ['Contract', 'MonthlyCharges', 'tenure', 'TotalCharges', 
+                       'InternetService', 'OnlineSecurity', 'PaperlessBilling']
+            importance = [0.505205, 0.187188, 0.169491, 0.047825, 0.032667, 0.008219, 0.007718]
+            
+            # Crear gráfico de barras
+            fig_importance = px.bar(
+                x=importance,
+                y=features,
+                orientation='h',
+                title='Feature Importance',
+                labels={'x': 'Importance', 'y': 'Features'},
+                color=importance,
+                color_continuous_scale='viridis'
+            )
+            
+            fig_importance.update_layout(
+                height=400,
+                showlegend=False
+            )
+            
+            st.plotly_chart(fig_importance, use_container_width=True)
             
     
     # ============================================================================
