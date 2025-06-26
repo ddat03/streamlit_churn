@@ -780,11 +780,9 @@ if dataset_original is not None or total_modelos > 0:
                 st.plotly_chart(fig_velocidad, use_container_width=True)
 
                 # Matriz de Confusión
-            st.subheader("📊 Matriz de Confusión")
+            st.subheader("Matriz de Confusión")
             
-            # Función para generar matriz de confusión basada en métricas
             def generar_matriz_confusion(accuracy, f1_score, total_samples=1000):
-                # Distribución típica: 70% No Churn, 30% Churn
                 actual_no_churn = int(total_samples * 0.7)  # 700
                 actual_churn = int(total_samples * 0.3)     # 300
                 
@@ -817,70 +815,9 @@ if dataset_original is not None or total_modelos > 0:
                 
                 return np.array([[tn, fp], [fn, tp]])
             
-            # Selector de modelo para matriz de confusión
-            modelo_cm = st.selectbox(
-                "Selecciona modelo para ver matriz de confusión:",
-                list(metricas_actuales.keys()),
-                key="modelo_confusion"
-            )
-            
-            if modelo_cm:
-                # Generar matriz de confusión
-                metricas_modelo = metricas_actuales[modelo_cm]
-                matriz = generar_matriz_confusion(
-                    metricas_modelo['Accuracy'], 
-                    metricas_modelo['F1-Score']
-                )
+           
                 
-                col_cm1, col_cm2 = st.columns([2, 1])
-                
-                with col_cm1:
-                    # Crear heatmap de matriz de confusión
-                    fig_cm = px.imshow(
-                        matriz,
-                        text_auto=True,
-                        color_continuous_scale='Blues',
-                        title=f'Matriz de Confusión - {modelo_cm} ({num_features} características)',
-                        labels=dict(x="Predicción", y="Real"),
-                        aspect="auto"
-                    )
-                    
-                    fig_cm.update_xaxes(
-                        tickvals=[0, 1], 
-                        ticktext=['No Churn', 'Churn'],
-                        side="bottom"
-                    )
-                    fig_cm.update_yaxes(
-                        tickvals=[0, 1], 
-                        ticktext=['No Churn', 'Churn']
-                    )
-                    
-                    fig_cm.update_layout(height=400)
-                    st.plotly_chart(fig_cm, use_container_width=True)
-                
-                with col_cm2:
-                    # Mostrar valores de la matriz
-                    st.write("**Valores de la Matriz:**")
-                    tn, fp = matriz[0]
-                    fn, tp = matriz[1]
-                    
-                    st.metric("✅ Verdaderos Negativos (TN)", f"{tn:,}")
-                    st.metric("❌ Falsos Positivos (FP)", f"{fp:,}")
-                    st.metric("❌ Falsos Negativos (FN)", f"{fn:,}")
-                    st.metric("✅ Verdaderos Positivos (TP)", f"{tp:,}")
-                    
-                    # Métricas derivadas
-                    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-                    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-                    specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
-                    
-                    st.write("**Métricas Derivadas:**")
-                    st.write(f"• Precisión: {precision:.1%}")
-                    st.write(f"• Recall: {recall:.1%}")
-                    st.write(f"• Especificidad: {specificity:.1%}")
-            
-            # Comparación de matrices para todos los modelos
-            st.subheader("🔍 Comparación de Matrices de Confusión")
+               
             
             # Crear matrices para todos los modelos
             fig_matrices = go.Figure()
@@ -928,28 +865,6 @@ if dataset_original is not None or total_modelos > 0:
                 )
             
             st.plotly_chart(fig_subplots, use_container_width=True)
-            
-            # Comparación entre 7 vs 19 características
-            st.subheader("🔄 Comparación: 7 vs 19 Características")
-            
-            if st.button("Ver comparación detallada 7 vs 19 características"):
-                # Crear tabla comparativa
-                comparacion_data = []
-                
-                for modelo in ['Stacking Diverse', 'Logistic Regression', 'Voting Classifier']:
-                    if modelo in metricas_7_features and modelo in metricas_19_features:
-                        comparacion_data.append({
-                            'Modelo': modelo,
-                            'Accuracy (7)': f"{metricas_7_features[modelo]['Accuracy']:.1%}",
-                            'Accuracy (19)': f"{metricas_19_features[modelo]['Accuracy']:.1%}",
-                            'AUC (7)': f"{metricas_7_features[modelo]['AUC']:.1%}",
-                            'AUC (19)': f"{metricas_19_features[modelo]['AUC']:.1%}",
-                            'Velocidad (7)': f"{metricas_7_features[modelo]['Velocidad_ms']:.1f} ms",
-                            'Velocidad (19)': f"{metricas_19_features[modelo]['Velocidad_ms']:.1f} ms"
-                        })
-                
-                df_comparacion = pd.DataFrame(comparacion_data)
-                st.dataframe(df_comparacion, use_container_width=True)
             
     
     # ============================================================================
