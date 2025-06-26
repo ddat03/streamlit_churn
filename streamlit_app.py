@@ -21,6 +21,22 @@ st.set_page_config(
 
 st.title("Predictor de Churn de Clientes Telco")
 st.markdown("### Evaluacion Final Aprendizaje de Maquina")
+# 5. SIDEBAR CON CONTROLES Y INFORMACIÓN
+st.sidebar.markdown("---")
+st.sidebar.markdown("### ⚙️ Configuración")
+
+modelo_info = st.sidebar.selectbox(
+    "Ver información del modelo:",
+    ["Stacking Diverse", "Logistic Regression", "Voting Classifier"]
+)
+
+if modelo_info == "Stacking Diverse":
+    st.sidebar.markdown("""
+    **Stacking Ensemble:**
+    - Combina múltiples algoritmos
+    - Mayor precisión
+    - Más complejo
+    """)
 
 # Las 19 características completas
 FEATURES_COMPLETAS = [
