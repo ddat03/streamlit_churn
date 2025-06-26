@@ -28,8 +28,6 @@ modelo_info = st.sidebar.selectbox(
 
 if modelo_info == "Stacking Classifier":
     st.sidebar.markdown("""
-    **BASE CLASSIFIER:**
-    
     **RandomForestClassifier:**
     - max_depth=5 
     - max_features=None 
@@ -63,8 +61,6 @@ if modelo_info == "Single Classifier":
 
 if modelo_info == "Voting Classifier":
     st.sidebar.markdown("""
-    **SOFT**
-    
     **XGBRegressor:**
     - n_estimators=100      
     - learning_rate=0.1
@@ -79,6 +75,10 @@ if modelo_info == "Voting Classifier":
     - min_samples_leaf=3
     - min_samples_split=4
     - n_estimators=112
+    
+    **SOFT**
+
+    
     """)
 # Las 19 características completas
 FEATURES_COMPLETAS = [
