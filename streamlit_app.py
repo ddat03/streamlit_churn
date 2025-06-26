@@ -237,9 +237,9 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         contrato = datos_cliente.get('Contract', 'Month-to-month')
         datos_procesados.append(1 if contrato == 'Two year' else 0)
         
-        genero = datos_cliente.get('PaperlessBilling', 'Yes')
-        datos_procesados.append(1 if genero == 'Yes' else 0)
-        
+        paperlessBilling = datos_cliente.get('PaperlessBilling', 'Yes')
+        datos_procesados.append(1 if paperlessBilling == 'Yes' else 0)
+    
         return np.array(datos_procesados).reshape(1, -1)
     
     else:
