@@ -266,7 +266,7 @@ if dataset_original is not None or total_modelos > 0:
         "EDA", 
         "Datos Limpios", 
         "Métricas y Rendimiento", 
-        "Dashboard"
+        "Resoluciones"
     ])
 
     # PESTAÑA 1: PREDICCIÓN
@@ -889,44 +889,40 @@ if dataset_original is not None or total_modelos > 0:
             st.plotly_chart(fig_importance, use_container_width=True)
             
     
-    # ============================================================================
     # PESTAÑA 5: DASHBOARD SIMPLE
-    # ============================================================================
 
     with tab5:
-        st.header("Dashboard Ejecutivo Simple")
+        st.header("Resoluciones")
         
         if dataset_original is None:
             st.error("❌ No hay dataset disponible para el dashboard")
             st.info("Por favor, asegúrate de que el archivo 'WA_Fn-UseC_-Telco-Customer-Churn.csv' esté en el directorio")
         else:
-            # KPIs principales
-            st.subheader("📊 Indicadores Clave")
+           
+            # Gráfico simple de insights
+            st.subheader("Señales Principales")
             
-            col1, col2, col3, col4 = st.columns(4)
+            # Datos reales para el gráfico
+            datos_insight = pd.DataFrame({
+                'Tipo de Contrato': churn_by_contract.index,
+                'Tasa de Churn': churn_by_contract.values * 100,
+                'Número de Clientes': dataset_original['Contract'].value_counts()[churn_by_contract.index].values
+            })
             
-            total_clientes = len(dataset_original)
-            churn_rate = (dataset_original['Churn'] == 'Yes').mean()
-            clientes_churn = (dataset_original['Churn'] == 'Yes').sum()
-            ingreso_promedio = dataset_original['MonthlyCharges'].mean()
+            col_graf1, col_graf2 = st.columns(2)
             
-            with col1:
-                st.metric("👥 Total Clientes", f"{total_clientes:,}")
+            with col_graf1:
+                fig_insight1 = px.bar(datos_insight, x='Tipo de Contrato', y='Tasa de Churn',
+                                     title="Tasa de Churn por Tipo de Contrato (%)",
+                                     color='Tasa de Churn', color_continuous_scale='reds')
+                st.plotly_chart(fig_insight1, use_container_width=True)
             
-            with col2:
-                st.metric("📈 Tasa de Churn", f"{churn_rate:.1%}")
+            with col_graf2:
+                fig_insight2 = px.pie(datos_insight, values='Número de Clientes', names='Tipo de Contrato',
+                                     title="Distribución de Clientes por Contrato")
+                st.plotly_chart(fig_insight2, use_container_width=True)
             
-            with col3:
-                st.metric("💰 Ingreso Mensual Promedio", f"${ingreso_promedio:.2f}")
-            
-            with col4:
-                if total_modelos > 0:
-                    st.metric("⭐ Modelos Disponibles", total_modelos)
-                else:
-                    st.metric("⭐ Modelos Disponibles", "0")
-            
-            # Recomendaciones simples
-            st.subheader("💡 Recomendaciones Principales")
+            st.subheader("Recomendaciones")
             
             col_rec1, col_rec2 = st.columns(2)
             
@@ -958,48 +954,7 @@ if dataset_original is not None or total_modelos > 0:
                 **Resultado:** Reducción estimada del 15% en churn
                 """)
             
-            # Gráfico simple de insights
-            st.subheader("📈 Insights Principales")
             
-            # Datos reales para el gráfico
-            datos_insight = pd.DataFrame({
-                'Tipo de Contrato': churn_by_contract.index,
-                'Tasa de Churn': churn_by_contract.values * 100,
-                'Número de Clientes': dataset_original['Contract'].value_counts()[churn_by_contract.index].values
-            })
-            
-            col_graf1, col_graf2 = st.columns(2)
-            
-            with col_graf1:
-                fig_insight1 = px.bar(datos_insight, x='Tipo de Contrato', y='Tasa de Churn',
-                                     title="Tasa de Churn por Tipo de Contrato (%)",
-                                     color='Tasa de Churn', color_continuous_scale='reds')
-                st.plotly_chart(fig_insight1, use_container_width=True)
-            
-            with col_graf2:
-                fig_insight2 = px.pie(datos_insight, values='Número de Clientes', names='Tipo de Contrato',
-                                     title="Distribución de Clientes por Contrato")
-                st.plotly_chart(fig_insight2, use_container_width=True)
-            
-            # Resumen final
-            st.subheader("📋 Resumen Ejecutivo")
-            
-            st.markdown(f"""
-            **🎯 Situación Actual:**
-            - {churn_rate:.1%} de clientes abandonan ({clientes_churn:,} de {total_clientes:,})
-            - Mayor riesgo en contratos mes-a-mes y fibra óptica
-            - {"Modelos ML disponibles para predicciones" if total_modelos > 0 else "Sin modelos ML disponibles"}
-            
-            **🚀 Oportunidades:**
-            - Migrar clientes a contratos largos puede reducir churn significativamente
-            - Programas de retención pueden generar grandes ahorros
-            - {"Predicción temprana permite intervención proactiva" if total_modelos > 0 else "Cargar modelos ML para habilitar predicciones"}
-            
-            **✅ Próximos Pasos:**
-            1. {"Implementar alertas automáticas para clientes de alto riesgo" if total_modelos > 0 else "Cargar modelos ML para habilitar predicciones automáticas"}
-            2. Diseñar campañas específicas por segmento de cliente
-            3. Monitorear métricas semanalmente para ajustar estrategias
-            """)
 
     # ============================================================================
     # INFORMACIÓN ADICIONAL AL FINAL
