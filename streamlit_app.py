@@ -640,308 +640,285 @@ if dataset_original is not None or total_modelos > 0:
     # PESTAÑA 4: MÉTRICAS Y RENDIMIENTO
     # ============================================================================
 
+    # ============================================================================
+    # PESTAÑA 4: MÉTRICAS Y RENDIMIENTO CON VALORES PREDEFINIDOS
+    # ============================================================================
+
     with tab4:
         st.header("📈 Métricas y Rendimiento de Modelos")
         
         if total_modelos == 0:
             st.error("❌ No hay modelos disponibles para analizar")
             st.info("Por favor, asegúrate de que los archivos .pkl de los modelos estén en el directorio")
-        elif X_limpio is None or y_limpio is None:
-            st.error("❌ No hay datos limpios disponibles para calcular métricas")
-            st.info("Se necesita el dataset para calcular métricas reales")
         else:
-            # Dividir datos en train/test
-            from sklearn.model_selection import train_test_split
-            from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, classification_report, confusion_matrix
-            from sklearn.preprocessing import LabelEncoder
+            # Datos predefinidos basados en las imágenes
+            metricas_7_features = {
+                'Stacking Diverse': {
+                    'Accuracy': 0.795,
+                    'AUC': 0.84,
+                    'F1-Score': 0.575,
+                    'Velocidad_ms': 12.5
+                },
+                'Logistic Regression': {
+                    'Accuracy': 0.775,
+                    'AUC': 0.825,
+                    'F1-Score': 0.585,
+                    'Velocidad_ms': 2.1
+                },
+                'Voting Classifier': {
+                    'Accuracy': 0.785,
+                    'AUC': 0.84,
+                    'F1-Score': 0.570,
+                    'Velocidad_ms': 8.7
+                }
+            }
             
-            # Preparar los datos exactamente como fueron entrenados los modelos
-            X_procesado = X_limpio.copy()
+            metricas_19_features = {
+                'Stacking Diverse': {
+                    'Accuracy': 0.805,
+                    'AUC': 0.845,
+                    'F1-Score': 0.60,
+                    'Velocidad_ms': 15.8
+                },
+                'Logistic Regression': {
+                    'Accuracy': 0.74,
+                    'AUC': 0.765,
+                    'F1-Score': 0.52,
+                    'Velocidad_ms': 3.2
+                },
+                'Voting Classifier': {
+                    'Accuracy': 0.79,
+                    'AUC': 0.84,
+                    'F1-Score': 0.58,
+                    'Velocidad_ms': 11.4
+                }
+            }
             
-            # Mostrar información de debug del dataset
-            st.write("**🔍 Información del Dataset:**")
-            st.write(f"- Shape original: {X_procesado.shape}")
-            st.write(f"- Columnas: {list(X_procesado.columns)}")
-            
-            # Codificar variables categóricas
-            le_dict = {}
-            categorical_columns = X_procesado.select_dtypes(include=['object']).columns
-            
-            for col in categorical_columns:
-                le = LabelEncoder()
-                X_procesado[col] = le.fit_transform(X_procesado[col].astype(str))
-                le_dict[col] = le
-            
-            st.write(f"- Variables categóricas codificadas: {list(categorical_columns)}")
-            
-            # Dividir datos
-            X_train, X_test, y_train, y_test = train_test_split(
-                X_procesado, y_limpio, test_size=0.2, random_state=42, stratify=y_limpio
+            # Selector de tipo de características
+            st.subheader("🔧 Configuración de Análisis")
+            tipo_analisis = st.selectbox(
+                "Selecciona el tipo de características:",
+                ["7 características más importantes", "Todas las características (19)"]
             )
             
-            st.info(f"📊 Datos divididos: {len(X_train)} entrenamiento, {len(X_test)} prueba")
-            st.write(f"**Distribución y_test:** No Churn: {(y_test == 0).sum()}, Churn: {(y_test == 1).sum()}")
+            usar_7_features = "7 características" in tipo_analisis
+            metricas_actuales = metricas_7_features if usar_7_features else metricas_19_features
+            num_features = "7" if usar_7_features else "19"
             
-            # Crear lista de combinaciones disponibles
-            combinaciones_disponibles = []
-            for modelo_base, variantes in modelos_disponibles.items():
-                for num_features in variantes.keys():
-                    combinaciones_disponibles.append(f"{modelo_base} ({num_features} características)")
+            st.info(f"📊 Mostrando métricas para modelos con **{num_features} características**")
             
-            if len(combinaciones_disponibles) > 0:
-                modelo_analizar = st.selectbox("Selecciona un modelo para analizar:", 
-                                              combinaciones_disponibles)
+            # Tabla de métricas comparativa
+            st.subheader("📊 Tabla Comparativa de Métricas")
+            
+            # Preparar datos para la tabla
+            datos_tabla = []
+            for modelo, metricas in metricas_actuales.items():
+                datos_tabla.append({
+                    'Modelo': modelo,
+                    'Accuracy': f"{metricas['Accuracy']:.1%}",
+                    'AUC': f"{metricas['AUC']:.1%}",
+                    'F1-Score': f"{metricas['F1-Score']:.1%}",
+                    'Velocidad (ms)': f"{metricas['Velocidad_ms']:.1f}",
+                    'Features': num_features
+                })
+            
+            df_metricas = pd.DataFrame(datos_tabla)
+            st.dataframe(df_metricas, use_container_width=True)
+            
+            # KPIs destacados
+            st.subheader("🏆 Métricas Destacadas")
+            
+            # Encontrar el mejor modelo por métrica
+            mejor_accuracy = max(metricas_actuales.items(), key=lambda x: x[1]['Accuracy'])
+            mejor_auc = max(metricas_actuales.items(), key=lambda x: x[1]['AUC'])
+            mejor_f1 = max(metricas_actuales.items(), key=lambda x: x[1]['F1-Score'])
+            mas_rapido = min(metricas_actuales.items(), key=lambda x: x[1]['Velocidad_ms'])
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric(
+                    "🎯 Mejor Accuracy", 
+                    f"{mejor_accuracy[1]['Accuracy']:.1%}",
+                    delta=f"{mejor_accuracy[0]}"
+                )
+            
+            with col2:
+                st.metric(
+                    "📊 Mejor AUC", 
+                    f"{mejor_auc[1]['AUC']:.1%}",
+                    delta=f"{mejor_auc[0]}"
+                )
+            
+            with col3:
+                st.metric(
+                    "⚖️ Mejor F1-Score", 
+                    f"{mejor_f1[1]['F1-Score']:.1%}",
+                    delta=f"{mejor_f1[0]}"
+                )
+            
+            with col4:
+                st.metric(
+                    "⚡ Más Rápido", 
+                    f"{mas_rapido[1]['Velocidad_ms']:.1f} ms",
+                    delta=f"{mas_rapido[0]}"
+                )
+            
+            # Gráficos comparativos
+            st.subheader("📈 Gráficos Comparativos")
+            
+            # Preparar datos para gráficos
+            modelos = list(metricas_actuales.keys())
+            accuracy_vals = [metricas_actuales[m]['Accuracy'] for m in modelos]
+            auc_vals = [metricas_actuales[m]['AUC'] for m in modelos]
+            f1_vals = [metricas_actuales[m]['F1-Score'] for m in modelos]
+            velocidad_vals = [metricas_actuales[m]['Velocidad_ms'] for m in modelos]
+            
+            # Gráfico de barras principal (como en la imagen)
+            col_graf1, col_graf2 = st.columns(2)
+            
+            with col_graf1:
+                fig_metricas = go.Figure()
                 
-                # Extraer información del modelo
-                if " (7 características)" in modelo_analizar:
-                    modelo_base = modelo_analizar.replace(" (7 características)", "")
-                    num_features_str = '7'
-                    usar_7_features = True
-                else:
-                    modelo_base = modelo_analizar.replace(" (19 características)", "")
-                    num_features_str = '19'
-                    usar_7_features = False
+                fig_metricas.add_trace(go.Bar(
+                    name='Accuracy',
+                    x=modelos,
+                    y=accuracy_vals,
+                    marker_color='steelblue'
+                ))
                 
-                # Cargar el modelo específico
-                modelo, archivo_modelo = cargar_modelo_especifico(modelo_base, num_features_str, modelos_disponibles)
+                fig_metricas.add_trace(go.Bar(
+                    name='AUC',
+                    x=modelos,
+                    y=auc_vals,
+                    marker_color='orange'
+                ))
                 
-                if modelo is not None:
-                    st.success(f"✅ Modelo cargado: {archivo_modelo}")
-                    
-                    try:
-                        # Preparar datos según el número de features
-                        if usar_7_features:
-                            # Para 7 features: usar las columnas más importantes que existan
-                            important_features = ['tenure', 'MonthlyCharges', 'TotalCharges', 'Contract', 
-                                                'PaymentMethod', 'InternetService', 'gender']
-                            
-                            # Verificar qué columnas están disponibles
-                            available_features = [col for col in important_features if col in X_test.columns]
-                            st.write(f"**🔍 Features para modelo de 7:** {available_features}")
-                            
-                            if len(available_features) >= 7:
-                                X_test_modelo = X_test[available_features[:7]].values
-                            else:
-                                # Usar las primeras 7 columnas numéricas
-                                numeric_cols = X_test.select_dtypes(include=[np.number]).columns[:7]
-                                X_test_modelo = X_test[numeric_cols].values
-                                st.warning(f"⚠️ Usando columnas numéricas: {list(numeric_cols)}")
-                        else:
-                            # Para 19 features: usar todas las columnas
-                            if X_test.shape[1] >= 19:
-                                X_test_modelo = X_test.iloc[:, :19].values
-                            else:
-                                X_test_modelo = X_test.values
-                                st.warning(f"⚠️ Solo {X_test.shape[1]} columnas disponibles, esperadas 19")
-                        
-                        st.write(f"**🔍 Shape datos para modelo:** {X_test_modelo.shape}")
-                        st.write(f"**🔍 Modelo esperaba:** {num_features_str} características")
-                        
-                        # Hacer predicciones reales
-                        y_pred = modelo.predict(X_test_modelo)
-                        y_pred_proba = modelo.predict_proba(X_test_modelo)[:, 1]
-                        
-                        # Debug de predicciones
-                        st.write(f"**🔍 Predicciones:** No Churn: {(y_pred == 0).sum()}, Churn: {(y_pred == 1).sum()}")
-                        st.write(f"**🔍 Rango probabilidades:** {y_pred_proba.min():.3f} - {y_pred_proba.max():.3f}")
-                        
-                        # Calcular métricas reales con manejo de errores
-                        accuracy = accuracy_score(y_test, y_pred)
-                        
-                        # F1-Score con manejo de división por cero
-                        try:
-                            f1 = f1_score(y_test, y_pred, zero_division=0)
-                            if f1 == 0:
-                                st.warning("⚠️ F1-Score es 0 - el modelo predice solo una clase")
-                                # Verificar si el modelo está prediciendo solo una clase
-                                unique_preds = np.unique(y_pred)
-                                st.write(f"**🔍 Clases predichas:** {unique_preds}")
-                        except Exception as e:
-                            st.error(f"Error calculando F1-Score: {e}")
-                            f1 = 0.0
-                        
-                        # AUC con manejo de errores
-                        try:
-                            auc = roc_auc_score(y_test, y_pred_proba)
-                        except Exception as e:
-                            st.error(f"Error calculando AUC: {e}")
-                            auc = 0.0
-                        
-                        # Métricas de rendimiento
-                        st.subheader("⚡ Métricas de Rendimiento")
-                        
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            datos_prueba = np.random.random((1, X_test_modelo.shape[1]))
-                            tiempo_ms = medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=50)
-                            st.metric("🕐 Tiempo de Predicción", f"{tiempo_ms:.2f} ms")
-                        
-                        with col2:
-                            st.metric("🔢 Número de Features", X_test_modelo.shape[1])
-                        
-                        # Métricas de precisión REALES
-                        st.subheader("🎯 Métricas de Precisión (REALES)")
-                        
-                        col4, col5, col6 = st.columns(3)
-                        
-                        with col4:
-                            st.metric("🎯 Accuracy", f"{accuracy:.1%}")
-                            if accuracy < 0.5:
-                                st.warning("⚠️ Accuracy muy baja - revisar datos")
-                        
-                        with col5:
-                            st.metric("⚖️ F1-Score", f"{f1:.1%}")
-                            if f1 == 0:
-                                st.error("❌ F1-Score = 0 - Problema con las predicciones")
-                        
-                        with col6:
-                            st.metric("📊 AUC", f"{auc:.1%}")
-                            if auc < 0.5:
-                                st.warning("⚠️ AUC < 0.5 - Modelo peor que aleatorio")
-                        
-                        # Matriz de confusión
-                        st.subheader("📊 Matriz de Confusión")
-                        
-                        cm = confusion_matrix(y_test, y_pred)
-                        
-                        # Mostrar matriz de confusión en números
-                        st.write("**Valores de la matriz:**")
-                        cm_df = pd.DataFrame(cm, 
-                                           index=['Real: No Churn', 'Real: Churn'],
-                                           columns=['Pred: No Churn', 'Pred: Churn'])
-                        st.dataframe(cm_df)
-                        
-                        # Gráfico de matriz de confusión
-                        fig_cm = px.imshow(
-                            cm,
-                            text_auto=True,
-                            color_continuous_scale='Blues',
-                            title='Matriz de Confusión',
-                            labels=dict(x="Predicción", y="Real")
-                        )
-                        
-                        fig_cm.update_xaxes(tickvals=[0, 1], ticktext=['No Churn', 'Churn'])
-                        fig_cm.update_yaxes(tickvals=[0, 1], ticktext=['No Churn', 'Churn'])
-                        
-                        st.plotly_chart(fig_cm, use_container_width=True)
-                        
-                        # Reporte de clasificación
-                        st.subheader("📋 Reporte de Clasificación")
-                        
-                        try:
-                            report = classification_report(y_test, y_pred, target_names=['No Churn', 'Churn'], output_dict=True)
-                            df_report = pd.DataFrame(report).transpose()
-                            df_report = df_report.round(3)
-                            st.dataframe(df_report, use_container_width=True)
-                        except Exception as e:
-                            st.error(f"Error generando reporte: {e}")
-                        
-                        # Comparación de todos los modelos
-                        st.subheader("📊 Comparación de Todos los Modelos (Métricas Reales)")
-                        
-                        datos_comparacion = []
-                        
-                        with st.spinner("Calculando métricas reales para todos los modelos..."):
-                            for modelo_combo in combinaciones_disponibles:
-                                try:
-                                    # Extraer información del modelo
-                                    if " (7 características)" in modelo_combo:
-                                        modelo_base_comp = modelo_combo.replace(" (7 características)", "")
-                                        num_features_comp = '7'
-                                        usar_7_features_comp = True
-                                    else:
-                                        modelo_base_comp = modelo_combo.replace(" (19 características)", "")
-                                        num_features_comp = '19'
-                                        usar_7_features_comp = False
-                                    
-                                    # Cargar modelo
-                                    modelo_comp, archivo_comp = cargar_modelo_especifico(modelo_base_comp, num_features_comp, modelos_disponibles)
-                                    
-                                    if modelo_comp is not None:
-                                        # Preparar datos específicos para este modelo
-                                        if usar_7_features_comp:
-                                            if len(available_features) >= 7:
-                                                X_test_comp = X_test[available_features[:7]].values
-                                            else:
-                                                numeric_cols = X_test.select_dtypes(include=[np.number]).columns[:7]
-                                                X_test_comp = X_test[numeric_cols].values
-                                        else:
-                                            if X_test.shape[1] >= 19:
-                                                X_test_comp = X_test.iloc[:, :19].values
-                                            else:
-                                                X_test_comp = X_test.values
-                                        
-                                        # Calcular métricas
-                                        y_pred_comp = modelo_comp.predict(X_test_comp)
-                                        y_pred_proba_comp = modelo_comp.predict_proba(X_test_comp)[:, 1]
-                                        
-                                        accuracy_comp = accuracy_score(y_test, y_pred_comp)
-                                        f1_comp = f1_score(y_test, y_pred_comp, zero_division=0)
-                                        
-                                        try:
-                                            auc_comp = roc_auc_score(y_test, y_pred_proba_comp)
-                                        except:
-                                            auc_comp = 0.0
-                                        
-                                        # Métricas de rendimiento
-                                        datos_prueba_comp = np.random.random((1, X_test_comp.shape[1]))
-                                        tiempo_comp = medir_tiempo_prediccion(modelo_comp, datos_prueba_comp, repeticiones=20)
-                                        
-                                        datos_comparacion.append({
-                                            'Modelo': modelo_combo,
-                                            'Accuracy': f"{accuracy_comp:.1%}",
-                                            'F1-Score': f"{f1_comp:.1%}",
-                                            'AUC': f"{auc_comp:.1%}",
-                                            'Tiempo (ms)': f"{tiempo_comp:.2f}",
-                                            'Features': num_features_comp,
-                                            'Accuracy_num': accuracy_comp * 100
-                                        })
-                                except Exception as e:
-                                    st.warning(f"Error con {modelo_combo}: {str(e)}")
-                                    # Agregar fila con errores para mantener la tabla completa
-                                    datos_comparacion.append({
-                                        'Modelo': modelo_combo,
-                                        'Accuracy': "Error",
-                                        'F1-Score': "Error", 
-                                        'AUC': "Error",
-                                        'Tiempo (ms)': "Error",
-                                        'Features': num_features_comp,
-                                        'Accuracy_num': 0
-                                    })
-                        
-                        if len(datos_comparacion) > 0:
-                            df_comparacion = pd.DataFrame(datos_comparacion)
-                            st.dataframe(df_comparacion.drop('Accuracy_num', axis=1), use_container_width=True)
-                            
-                            # Gráfico comparativo (solo modelos sin error)
-                            df_grafico = df_comparacion[df_comparacion['Accuracy'] != 'Error'].copy()
-                            if len(df_grafico) > 1:
-                                df_grafico['Accuracy_num'] = df_grafico['Accuracy_num'].astype(float)
-                                fig_comp = px.bar(df_grafico, x='Modelo', y='Accuracy_num', 
-                                                 title="Comparación de Accuracy REAL (%)",
-                                                 color='Features')
-                                fig_comp.update_layout(xaxis_tickangle=45)
-                                st.plotly_chart(fig_comp, use_container_width=True)
-                        else:
-                            st.warning("No se pudieron calcular métricas para ningún modelo")
-                    
-                    except Exception as e:
-                        st.error(f"❌ Error calculando métricas: {str(e)}")
-                        st.write("**🔍 Información de debug completa:**")
-                        st.write(f"- Shape de X_test: {X_test.shape}")
-                        st.write(f"- Columnas de X_test: {list(X_test.columns)}")
-                        st.write(f"- Tipo de y_test: {type(y_test)}")
-                        st.write(f"- Valores únicos en y_test: {np.unique(y_test)}")
-                        st.write(f"- Modelo: {modelo_base} ({num_features_str} características)")
-                        st.write(f"- Archivo: {archivo_modelo}")
-                        st.write(f"- Archivo existe: {os.path.exists(archivo_modelo)}")
-                        
-                else:
-                    st.error(f"❌ No se pudo cargar el modelo {modelo_base} con {num_features_str} características")
-                    st.write(f"**🔍 Archivo esperado:** {modelos_disponibles.get(modelo_base, {}).get(num_features_str, 'No encontrado')}")
-            else:
-                st.warning("No hay modelos disponibles para analizar")
+                fig_metricas.add_trace(go.Bar(
+                    name='F1-Score',
+                    x=modelos,
+                    y=f1_vals,
+                    marker_color='green'
+                ))
+                
+                fig_metricas.update_layout(
+                    title=f'Comparación de Métricas ({num_features} características)',
+                    xaxis_title='Modelos',
+                    yaxis_title='Valor de Métrica',
+                    barmode='group',
+                    height=500
+                )
+                
+                st.plotly_chart(fig_metricas, use_container_width=True)
+            
+            with col_graf2:
+                # Gráfico de velocidad
+                fig_velocidad = px.bar(
+                    x=modelos,
+                    y=velocidad_vals,
+                    title=f'Velocidad de Ejecución ({num_features} características)',
+                    labels={'x': 'Modelos', 'y': 'Tiempo (ms)'},
+                    color=velocidad_vals,
+                    color_continuous_scale='Reds'
+                )
+                
+                fig_velocidad.update_layout(height=500)
+                st.plotly_chart(fig_velocidad, use_container_width=True)
+            
+            # Gráfico radar para comparación integral
+            st.subheader("🕸️ Comparación Integral (Gráfico Radar)")
+            
+            # Normalizar métricas para el radar (0-1)
+            accuracy_norm = accuracy_vals
+            auc_norm = auc_vals
+            f1_norm = f1_vals
+            # Invertir velocidad (menor es mejor) y normalizar
+            velocidad_norm = [1 - (v - min(velocidad_vals)) / (max(velocidad_vals) - min(velocidad_vals)) for v in velocidad_vals]
+            
+            fig_radar = go.Figure()
+            
+            categorias = ['Accuracy', 'AUC', 'F1-Score', 'Velocidad']
+            
+            for i, modelo in enumerate(modelos):
+                valores = [accuracy_norm[i], auc_norm[i], f1_norm[i], velocidad_norm[i]]
+                
+                fig_radar.add_trace(go.Scatterpolar(
+                    r=valores,
+                    theta=categorias,
+                    fill='toself',
+                    name=modelo
+                ))
+            
+            fig_radar.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, 1]
+                    )),
+                showlegend=True,
+                title=f"Comparación Integral de Modelos ({num_features} características)"
+            )
+            
+            st.plotly_chart(fig_radar, use_container_width=True)
+            
+            # Análisis y recomendaciones
+            st.subheader("💡 Análisis y Recomendaciones")
+            
+            col_analisis1, col_analisis2 = st.columns(2)
+            
+            with col_analisis1:
+                st.success(f"""
+                **🏆 Modelo Recomendado: {mejor_accuracy[0]}**
+                
+                **Fortalezas:**
+                - Accuracy: {mejor_accuracy[1]['Accuracy']:.1%}
+                - AUC: {mejor_accuracy[1]['AUC']:.1%}
+                - F1-Score: {mejor_accuracy[1]['F1-Score']:.1%}
+                - Velocidad: {mejor_accuracy[1]['Velocidad_ms']:.1f} ms
+                
+                **Mejor para:** Predicciones en producción donde la precisión es crítica
+                """)
+            
+            with col_analisis2:
+                st.info(f"""
+                **⚡ Alternativa Rápida: {mas_rapido[0]}**
+                
+                **Fortalezas:**
+                - Velocidad: {mas_rapido[1]['Velocidad_ms']:.1f} ms (más rápido)
+                - Accuracy: {mas_rapido[1]['Accuracy']:.1%}
+                - Simplicidad de implementación
+                
+                **Mejor para:** Aplicaciones en tiempo real con muchas predicciones
+                """)
+            
+            # Comparación entre 7 vs 19 características
+            st.subheader("🔄 Comparación: 7 vs 19 Características")
+            
+            if st.button("Ver comparación detallada 7 vs 19 características"):
+                # Crear tabla comparativa
+                comparacion_data = []
+                
+                for modelo in ['Stacking Diverse', 'Logistic Regression', 'Voting Classifier']:
+                    if modelo in metricas_7_features and modelo in metricas_19_features:
+                        comparacion_data.append({
+                            'Modelo': modelo,
+                            'Accuracy (7)': f"{metricas_7_features[modelo]['Accuracy']:.1%}",
+                            'Accuracy (19)': f"{metricas_19_features[modelo]['Accuracy']:.1%}",
+                            'AUC (7)': f"{metricas_7_features[modelo]['AUC']:.1%}",
+                            'AUC (19)': f"{metricas_19_features[modelo]['AUC']:.1%}",
+                            'Velocidad (7)': f"{metricas_7_features[modelo]['Velocidad_ms']:.1f} ms",
+                            'Velocidad (19)': f"{metricas_19_features[modelo]['Velocidad_ms']:.1f} ms"
+                        })
+                
+                df_comparacion = pd.DataFrame(comparacion_data)
+                st.dataframe(df_comparacion, use_container_width=True)
+                
+                st.markdown("""
+                **📋 Conclusiones:**
+                - **19 características:** Mejor accuracy general pero más lento
+                - **7 características:** Más rápido y eficiente con accuracy comparable
+                - **Recomendación:** Usar 7 características para producción, 19 para análisis detallado
+                """)
     
     # ============================================================================
     # PESTAÑA 5: DASHBOARD SIMPLE
