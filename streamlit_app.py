@@ -410,18 +410,7 @@ if dataset_original is not None or total_modelos > 0:
                         
                         Contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
                         
-                        SeniorCitizen = 0
-                        Partner = "No"
-                        Dependents = "No"
-                        PhoneService = "Yes"
-                        MultipleLines = "No"
-                        OnlineSecurity = "No"
-                        OnlineBackup = "No"
-                        DeviceProtection = "No"
-                        TechSupport = "No"
-                        StreamingTV = "No"
-                        StreamingMovies = "No"
-                        PaperlessBilling = "Yes"
+
                         
                     else:
                         # FORMULARIO COMPLETO - TODAS LAS 19 CARACTERÍSTICAS
