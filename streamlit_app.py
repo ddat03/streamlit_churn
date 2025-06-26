@@ -616,9 +616,7 @@ if dataset_original is not None or total_modelos > 0:
                         st.error(f"❌ El modelo {modelo_seleccionado} no está disponible con {num_features_str} características")
                     else:
                         st.info("👆 Completa el formulario y haz clic en 'Hacer Predicción'")
-                else:
-                    st.error("❌ No hay combinación válida de modelo y características disponible")
-                    st.info("Verifica que los archivos de modelo necesarios estén en el directorio")
+            
 
     # ============================================================================
     # PESTAÑA 2: EDA SIMPLE
