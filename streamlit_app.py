@@ -73,7 +73,7 @@ def limpiar_datos(df_original):
     
     if 'TotalCharges' in X.columns:
         X['TotalCharges'] = pd.to_numeric(X['TotalCharges'], errors='coerce').fillna(0)
-        st.write("✅ TotalCharges convertido a números")
+        
     
     servicios_arreglar = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
                          'TechSupport', 'StreamingTV', 'StreamingMovies']
@@ -82,7 +82,6 @@ def limpiar_datos(df_original):
         if servicio in X.columns:
             X[servicio] = X[servicio].replace('No internet service', 'No')
     
-    st.write("✅ Categorías simplificadas")
     
     return X, y
 
@@ -278,13 +277,12 @@ if dataset_original is not None or total_modelos > 0:
     # PESTAÑA 1: PREDICCIÓN
 
     with tab1:
-        st.header("🔮 Hacer una Predicción")
         
         if total_modelos == 0:
             st.error("❌ No hay modelos disponibles para hacer predicciones")
             st.info("Por favor, asegúrate de que los archivos .pkl de los modelos estén en el directorio")
         else:
-            st.subheader("⚙️ Configuración del Modelo")
+            st.subheader("Configuración del Modelo")
             
             col_config1, col_config2 = st.columns(2)
             
@@ -297,9 +295,8 @@ if dataset_original is not None or total_modelos > 0:
                     modelo_seleccionado = None
                 else:
                     modelo_seleccionado = st.selectbox(
-                        "🤖 Selecciona el Modelo:",
+                        "Selecciona el Modelo:",
                         modelos_base_disponibles,
-                        help="Elige el modelo de machine learning para hacer la predicción"
                     )
             
             with col_config2:
@@ -317,9 +314,9 @@ if dataset_original is not None or total_modelos > 0:
                         tipo_features = None
                     else:
                         tipo_features = st.selectbox(
-                            "🔧 Número de Características:",
+                            "Número de Características:",
                             opciones_features,
-                            help="Elige cuántas características usar para la predicción"
+                            
                         )
                 else:
                     tipo_features = None
@@ -349,16 +346,16 @@ if dataset_original is not None or total_modelos > 0:
                         
                         col_cargos1, col_cargos2 = st.columns(2)
                         with col_cargos1:
-                            MonthlyCharges = st.number_input("Cargo Mensual ($)", min_value=0.0, value=50.0)
+                            MonthlyCharges = st.number_input("MonthlyCharges ($)", min_value=0.0, value=50.0)
                         with col_cargos2:
-                            TotalCharges = st.number_input("Total Cargos ($)", min_value=0.0, value=1000.0)
+                            TotalCharges = st.number_input("TotalCharges ($)", min_value=0.0, value=1000.0)
                         
-                        InternetService = st.selectbox("Servicio de Internet", ["DSL", "Fiber optic", "No"])
+                        InternetService = st.selectbox("InternetService", ["DSL", "Fiber optic", "No"])
                         
-                        PaymentMethod = st.selectbox("Método de Pago", 
+                        PaymentMethod = st.selectbox("PaymentMethod", 
                             ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
                         
-                        Contract = st.selectbox("Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
+                        Contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
                         
                         SeniorCitizen = 0
                         Partner = "No"
@@ -383,32 +380,32 @@ if dataset_original is not None or total_modelos > 0:
                         
                         with col1:
                             gender = st.selectbox("Género", ["Male", "Female"])
-                            SeniorCitizen = st.selectbox("¿Es Senior?", [0, 1], format_func=lambda x: "No" if x == 0 else "Sí")
-                            Partner = st.selectbox("¿Tiene Pareja?", ["No", "Yes"])
+                            SeniorCitizen = st.selectbox("SeniorCitizen", [0, 1], format_func=lambda x: "No" if x == 0 else "Sí")
+                            Partner = st.selectbox("Partner", ["No", "Yes"])
                         
                         with col2:
-                            Dependents = st.selectbox("¿Tiene Dependientes?", ["No", "Yes"])
-                            tenure = st.number_input("Meses como Cliente", min_value=0, max_value=100, value=12)
+                            Dependents = st.selectbox("Dependientes", ["No", "Yes"])
+                            tenure = st.number_input("Meses como Cliente(tenure)", min_value=0, max_value=100, value=12)
                         
                         # Servicios
                         st.markdown("**📞 Servicios**")
                         col3, col4 = st.columns(2)
                         
                         with col3:
-                            PhoneService = st.selectbox("Servicio Telefónico", ["Yes", "No"])
-                            MultipleLines = st.selectbox("Múltiples Líneas", ["No", "Yes"])
-                            InternetService = st.selectbox("Internet", ["DSL", "Fiber optic", "No"])
+                            PhoneService = st.selectbox("PhoneService", ["Yes", "No"])
+                            MultipleLines = st.selectbox("MultipleLines", ["No", "Yes"])
+                            InternetService = st.selectbox("InternetService", ["DSL", "Fiber optic", "No"])
                         
                         with col4:
-                            OnlineSecurity = st.selectbox("Seguridad Online", ["No", "Yes"])
-                            OnlineBackup = st.selectbox("Backup Online", ["No", "Yes"])
-                            DeviceProtection = st.selectbox("Protección de Dispositivos", ["No", "Yes"])
+                            OnlineSecurity = st.selectbox(OnlineSecurity", ["No", "Yes"])
+                            OnlineBackup = st.selectbox("OnlineBackup", ["No", "Yes"])
+                            DeviceProtection = st.selectbox("DeviceProtection", ["No", "Yes"])
                         
                         col5, col6 = st.columns(2)
                         
                         with col5:
-                            TechSupport = st.selectbox("Soporte Técnico", ["No", "Yes"])
-                            StreamingTV = st.selectbox("Streaming TV", ["No", "Yes"])
+                            TechSupport = st.selectbox("TechSupport", ["No", "Yes"])
+                            StreamingTV = st.selectbox("StreamingTV", ["No", "Yes"])
                         
                         with col6:
                             StreamingMovies = st.selectbox("Streaming Movies", ["No", "Yes"])
@@ -417,20 +414,20 @@ if dataset_original is not None or total_modelos > 0:
                         col7, col8 = st.columns(2)
                         
                         with col7:
-                            Contract = st.selectbox("Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
-                            PaperlessBilling = st.selectbox("Facturación Sin Papel", ["Yes", "No"])
+                            Contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
+                            PaperlessBilling = st.selectbox("PaperlessBilling", ["Yes", "No"])
                         
                         with col8:
-                            PaymentMethod = st.selectbox("Método de Pago", 
+                            PaymentMethod = st.selectbox("PaymentMethodo", 
                                 ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
                         
                         col9, col10 = st.columns(2)
                         
                         with col9:
-                            MonthlyCharges = st.number_input("Cargo Mensual ($)", min_value=0.0, value=50.0)
+                            MonthlyCharges = st.number_input("MonthlyCharges ($)", min_value=0.0, value=50.0)
                         
                         with col10:
-                            TotalCharges = st.number_input("Total Cargos ($)", min_value=0.0, value=1000.0)
+                            TotalCharges = st.number_input("TotalCharges ($)", min_value=0.0, value=1000.0)
                     
                     boton_predecir = st.form_submit_button("Predicción", type="primary")
             
@@ -796,19 +793,19 @@ for service in services_to_fix:
             ingreso_promedio = dataset_original['MonthlyCharges'].mean()
             
             with col1:
-                st.metric("👥 Total Clientes", f"{total_clientes:,}", help="Número total de clientes en el dataset")
+                st.metric("👥 Total Clientes", f"{total_clientes:,}")
             
             with col2:
-                st.metric("📈 Tasa de Churn", f"{churn_rate:.1%}", help="Porcentaje de clientes que abandonan")
+                st.metric("📈 Tasa de Churn", f"{churn_rate:.1%}")
             
             with col3:
-                st.metric("💰 Ingreso Mensual Promedio", f"${ingreso_promedio:.2f}", help="Promedio de cargos mensuales")
+                st.metric("💰 Ingreso Mensual Promedio", f"${ingreso_promedio:.2f}")
             
             with col4:
                 if total_modelos > 0:
-                    st.metric("⭐ Modelos Disponibles", total_modelos, help="Número de modelos ML cargados")
+                    st.metric("⭐ Modelos Disponibles", total_modelos)
                 else:
-                    st.metric("⭐ Modelos Disponibles", "0", help="No hay modelos disponibles")
+                    st.metric("⭐ Modelos Disponibles", "0")
             
             # Recomendaciones simples
             st.subheader("💡 Recomendaciones Principales")
