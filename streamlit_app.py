@@ -329,7 +329,7 @@ if dataset_original is not None or total_modelos > 0:
                 num_features_str = '7' if usar_7_features else '19'
                 
                     
-                    st.markdown("---")  
+            st.markdown("---")  
             
             col_formulario, col_resultado = st.columns([2, 1])
             
