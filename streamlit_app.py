@@ -553,35 +553,50 @@ if dataset_original is not None or total_modelos > 0:
         if dataset_original is None:
             st.error("❌ No hay dataset disponible para mostrar el proceso de limpieza")
         else:
-            # Mostrar el código que se ejecutó
-            st.subheader("💻 Código de Limpieza")
+ 
+            # Gráfico de correlación con Churn
+            st.subheader("🔗 Correlación con Churn")
             
-            codigo_limpieza = '''
-# Código ejecutado para limpiar los datos:
-
-# 1. Eliminar customerID
-if 'customerID' in df.columns:
-    df = df.drop('customerID', axis=1)
-
-# 2. Separar variable objetivo
-y = df['Churn'].map({'No': 0, 'Yes': 1})
-X = df.drop('Churn', axis=1)
-
-# 3. Convertir TotalCharges a numérico
-if 'TotalCharges' in X.columns:
-    X['TotalCharges'] = pd.to_numeric(X['TotalCharges'], errors='coerce').fillna(0)
-
-# 4. Simplificar categorías redundantes
-services_to_fix = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
-                  'TechSupport', 'StreamingTV', 'StreamingMovies']
-
-for service in services_to_fix:
-    if service in X.columns:
-        X[service] = X[service].replace('No internet service', 'No')
-        '''
+            # Preparar datos para correlación
+            df_corr = dataset_original.copy()
             
-            st.code(codigo_limpieza, language='python')
+            # Convertir variables categóricas a numéricas para correlación
+            df_corr['Churn_num'] = df_corr['Churn'].map({'No': 0, 'Yes': 1})
+            df_corr['gender_num'] = df_corr['gender'].map({'Male': 1, 'Female': 0})
+            df_corr['Partner_num'] = df_corr['Partner'].map({'Yes': 1, 'No': 0})
+            df_corr['Dependents_num'] = df_corr['Dependents'].map({'Yes': 1, 'No': 0})
+            df_corr['PhoneService_num'] = df_corr['PhoneService'].map({'Yes': 1, 'No': 0})
+            df_corr['PaperlessBilling_num'] = df_corr['PaperlessBilling'].map({'Yes': 1, 'No': 0})
             
+            # Convertir TotalCharges a numérico
+            df_corr['TotalCharges'] = pd.to_numeric(df_corr['TotalCharges'], errors='coerce').fillna(0)
+            
+            # Seleccionar solo columnas numéricas para correlación
+            columnas_numericas = ['SeniorCitizen', 'tenure', 'MonthlyCharges', 'TotalCharges', 
+                                 'Churn_num', 'gender_num', 'Partner_num', 'Dependents_num', 
+                                 'PhoneService_num', 'PaperlessBilling_num']
+            
+            # Calcular correlaciones con Churn
+            correlaciones = df_corr[columnas_numericas].corr()['Churn_num'].drop('Churn_num').sort_values(key=abs, ascending=False)
+            
+            # Crear gráfico de barras para correlaciones
+            fig_corr = go.Figure(data=[
+                go.Bar(
+                    x=correlaciones.values,
+                    y=correlaciones.index,
+                    orientation='h',
+                    marker_color=['red' if x < 0 else 'green' for x in correlaciones.values]
+                )
+            ])
+            
+            fig_corr.update_layout(
+                title="Correlación de Variables con Churn",
+                xaxis_title="Correlación",
+                yaxis_title="Variables",
+                height=500
+            )
+            
+            st.plotly_chart(fig_corr, use_container_width=True)
             # Mostrar resultados de la limpieza
             st.subheader("📊 Resultados de la Limpieza")
             
