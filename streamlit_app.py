@@ -397,7 +397,7 @@ if dataset_original is not None or total_modelos > 0:
                             InternetService = st.selectbox("InternetService", ["DSL", "Fiber optic", "No"])
                         
                         with col4:
-                            OnlineSecurity = st.selectbox(OnlineSecurity", ["No", "Yes"])
+                            OnlineSecurity = st.selectbox("OnlineSecurity", ["No", "Yes"])
                             OnlineBackup = st.selectbox("OnlineBackup", ["No", "Yes"])
                             DeviceProtection = st.selectbox("DeviceProtection", ["No", "Yes"])
                         
