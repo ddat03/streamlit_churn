@@ -39,11 +39,8 @@ FEATURES_TOP_7 = [
 
 @st.cache_data  
 def cargar_dataset():
-    """
-    Función para cargar el archivo CSV real
-    """
+
     try:
-        # Intentar cargar el archivo real
         df = pd.read_csv('WA_Fn-UseC_-Telco-Customer-Churn.csv')
         st.success("✅ Dataset cargado correctamente")
         return df
@@ -477,7 +474,7 @@ if dataset_original is not None or total_modelos > 0:
                             
                             st.info(f"**Modelo usado:** {modelo_seleccionado}")
                             st.info(f"**Features usadas:** {num_features_str}")
-                            st.info(f"**Archivo:** {archivo_modelo}")
+                        
                             
                     except Exception as e:
                         st.error(f"Error en la predicción: {e}")
@@ -887,57 +884,8 @@ for service in services_to_fix:
     # INFORMACIÓN ADICIONAL AL FINAL
     # ============================================================================
 
-    # Información del estado de carga
-    st.markdown("---")
-    st.markdown("### 📊 Estado de la Aplicación")
-
-    col_status1, col_status2, col_status3 = st.columns(3)
-
-    with col_status1:
-        st.metric("🤖 Modelos Cargados", total_modelos)
-
-    with col_status2:
-        if dataset_original is not None:
-            st.metric("📊 Filas en Dataset", len(dataset_original))
-        else:
-            st.metric("📊 Filas en Dataset", "Error")
-
-    with col_status3:
-        if X_limpio is not None:
-            st.metric("🧹 Features Limpias", len(X_limpio.columns))
-        else:
-            st.metric("🧹 Features Limpias", "Error")
-
-else:
-    # Mostrar mensaje de error si no hay datos ni modelos
-    st.error("❌ No se pudieron cargar ni el dataset ni los modelos")
-    st.markdown("### 📋 Archivos Requeridos:")
-    st.markdown("""
-    **Dataset:**
-    - `WA_Fn-UseC_-Telco-Customer-Churn.csv`
-    
-    **Modelos (archivos .pkl):**
-    - `stacking_diverse_trained.pkl`
-    - `Single Classifier (Logistic Regression)_trained.pkl`
-    - `Voting Classifier (Soft)_trained.pkl`
-    - `stacking_diverse_trained_7.pkl`
-    - `Single Classifier_7.pkl`
-    - `Voting Classifier (Soft)_trained_7.pkl`
-    
-    Por favor, asegúrate de que estos archivos estén en el mismo directorio que este script de Streamlit.
-    """)
-
 # Información del desarrollador
 st.markdown("---")
-st.markdown("**👨‍💻 Aplicación de Machine Learning para Predicción de Churn**")
-st.markdown("**🎯 Versión:** Simplificada - Solo Archivos Reales")
-st.markdown("**💡 Tip:** Asegúrate de tener los archivos CSV y PKL en el directorio")
-
-if len(modelos_disponibles) > 0 and dataset_original is not None:
-    st.success("✅ Aplicación lista para usar")
-elif len(modelos_disponibles) > 0:
-    st.warning("⚠️ Modelos cargados pero falta el dataset")
-elif dataset_original is not None:
-    st.warning("⚠️ Dataset cargado pero faltan los modelos")
-else:
-    st.error("❌ Faltan tanto el dataset como los modelos")
+st.markdown("**Realizado por Diego Aleman**")
+st.markdown("**Docente: PhD Juan Astudillo**")
+st.markdown("**Maestria en Ciencia de Datos**")
