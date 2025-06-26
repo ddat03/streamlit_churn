@@ -10,10 +10,6 @@ from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 import warnings
 warnings.filterwarnings('ignore')
 
-# ============================================================================
-# CONFIGURACIÓN BÁSICA DE LA PÁGINA
-# ============================================================================
-
 st.set_page_config(
     page_title="Predictor de Churn",
     layout="wide"
@@ -21,7 +17,7 @@ st.set_page_config(
 
 st.title("Predictor de Churn de Clientes Telco")
 st.markdown("### Evaluacion Final Aprendizaje de Maquina")
-# 5. SIDEBAR CON CONTROLES Y INFORMACIÓN
+
 st.sidebar.markdown("---")
 st.sidebar.markdown("### MODELOS")
 
@@ -32,7 +28,8 @@ modelo_info = st.sidebar.selectbox(
 
 if modelo_info == "Stacking Classifier":
     st.sidebar.markdown("""
-    **Stacking Ensemble:**
+    **BASE CLASSIFIER:**
+    
     **RandomForestClassifier:**
     - max_depth=5 
     - max_features=None 
@@ -49,8 +46,40 @@ if modelo_info == "Stacking Classifier":
     - max_iter=1000
     
     **Gaussian Naive Bayes**
+
+    **META CLASSIFIER**
+    **Logistic Regression**
     """)
 
+if modelo_info == "Single Classifier":
+    st.sidebar.markdown("""
+    **Multi-layer Perceptron classifier:**
+    - hidden_layer_sizes=(100, 50, 25)
+    - activation='relu'
+    - solver='adam'
+    - max_iter=1000
+    - random_state=42
+    """)
+
+if modelo_info == "Voting Classifier":
+    st.sidebar.markdown("""
+    **SOFT**
+    
+    **XGBRegressor:**
+    - n_estimators=100      
+    - learning_rate=0.1
+    - max_depth=15                
+    - min_child_weight=10         
+    - subsample=0.8
+    - colsample_bytree=0.8 
+
+    **RandomForestClassifier:**
+    - max_depth=5 
+    - max_features=None 
+    - min_samples_leaf=3
+    - min_samples_split=4
+    - n_estimators=112
+    """)
 # Las 19 características completas
 FEATURES_COMPLETAS = [
     'SeniorCitizen', 'tenure', 'MonthlyCharges', 'TotalCharges', 'gender', 
