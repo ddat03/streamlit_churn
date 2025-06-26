@@ -33,7 +33,7 @@ FEATURES_COMPLETAS = [
 # Las 7 características más importantes
 FEATURES_TOP_7 = [
     'TotalCharges', 'MonthlyCharges', 'tenure', 'InternetService', 
-    'PaymentMethod', 'Contract', 'gender'
+    'PaymentMethod', 'Contract', 'PaperlessBilling'
 ]
 
 
@@ -191,8 +191,8 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         contrato = datos_cliente.get('Contract', 'Month-to-month')
         datos_procesados.append(1 if contrato == 'Two year' else 0)
         
-        genero = datos_cliente.get('gender', 'Male')
-        datos_procesados.append(1 if genero == 'Male' else 0)
+        genero = datos_cliente.get('PaperlessBilling', 'Yes')
+        datos_procesados.append(1 if genero == 'Yes' else 0)
         
         return np.array(datos_procesados).reshape(1, -1)
     
@@ -335,7 +335,7 @@ if dataset_original is not None or total_modelos > 0:
                         
                         st.markdown("** 7 Características Principales**")
                         
-                        gender = st.selectbox("Género", ["Male", "Female"])
+                        PaperlessBilling = st.selectbox("PaperlessBilling", ["Yes", "No"])
                         
                         tenure = st.number_input("Tenure", min_value=0, max_value=100, value=12)
                         
@@ -526,8 +526,8 @@ if dataset_original is not None or total_modelos > 0:
                 st.plotly_chart(fig1, use_container_width=True)
                 
                 # Gráfico por género
-                fig3 = px.histogram(dataset_original, x='gender', color='Churn', 
-                                   title="Churn por Género", barmode='group')
+                fig3 = px.histogram(dataset_original, x='PaperlessBilling', color='Churn', 
+                                   title="Churn por PaperlessBilling", barmode='group')
                 st.plotly_chart(fig3, use_container_width=True)
             
             with col_graf2:
