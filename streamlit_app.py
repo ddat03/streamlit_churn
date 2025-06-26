@@ -15,19 +15,12 @@ warnings.filterwarnings('ignore')
 # ============================================================================
 
 st.set_page_config(
-    page_title="🔮 Predictor de Churn",
-    page_icon="🔮",
+    page_title="Predictor de Churn",
     layout="wide"
 )
 
-# Título principal
-st.title("🔮 Predictor de Churn de Clientes Telco")
-st.markdown("### Aplicación Simple de Machine Learning")
-
-
-# ============================================================================
-# LISTA DE CARACTERÍSTICAS (FEATURES)
-# ============================================================================
+st.title("Predictor de Churn de Clientes Telco")
+st.markdown("### Evaluacion Final Aprendizaje de Maquina")
 
 # Las 19 características completas
 FEATURES_COMPLETAS = [
@@ -43,11 +36,8 @@ FEATURES_TOP_7 = [
     'PaymentMethod', 'Contract', 'gender'
 ]
 
-# ============================================================================
-# FUNCIÓN PARA CARGAR EL DATASET
-# ============================================================================
 
-@st.cache_data  # Esto hace que Streamlit guarde los datos en memoria
+@st.cache_data  
 def cargar_dataset():
     """
     Función para cargar el archivo CSV real
@@ -63,40 +53,28 @@ def cargar_dataset():
         st.error("Por favor, asegúrate de que el archivo esté en el directorio de la aplicación")
         return None
 
-# ============================================================================
-# FUNCIÓN PARA LIMPIAR LOS DATOS
-# ============================================================================
 
 def limpiar_datos(df_original):
-    """
-    Función simple para limpiar los datos como me dijiste
-    """
+
     if df_original is None:
         return None, None
         
-    # Hacer una copia para no modificar el original
     df = df_original.copy()
     
-    # 1. Eliminar customerID si existe
     if 'customerID' in df.columns:
         df = df.drop('customerID', axis=1)
-        st.write("✅ CustomerID eliminado")
     
-    # 2. Separar la variable objetivo (y) de las características (X)
     if 'Churn' in df.columns:
         y = df['Churn'].map({'No': 0, 'Yes': 1})  # Convertir a números
         X = df.drop('Churn', axis=1)
-        st.write("✅ Variable objetivo separada y convertida a números")
     else:
         st.error("❌ No se encontró la columna 'Churn' en el dataset")
         return None, None
     
-    # 3. Convertir TotalCharges a números
     if 'TotalCharges' in X.columns:
         X['TotalCharges'] = pd.to_numeric(X['TotalCharges'], errors='coerce').fillna(0)
         st.write("✅ TotalCharges convertido a números")
     
-    # 4. Simplificar categorías como me dijiste
     servicios_arreglar = ['OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
                          'TechSupport', 'StreamingTV', 'StreamingMovies']
     
@@ -108,19 +86,13 @@ def limpiar_datos(df_original):
     
     return X, y
 
-# ============================================================================
-# FUNCIÓN PARA CARGAR LOS MODELOS
-# ============================================================================
 
-@st.cache_resource  # Esto hace que Streamlit guarde los modelos en memoria
+@st.cache_resource  
 def cargar_modelos():
-    """
-    Función para verificar qué modelos están disponibles
-    """
+
     modelos_disponibles = {}
     errores = []
     
-    # Mapeo de modelos base y sus archivos
     modelos_base = {
         'Stacking Diverse': {
             '19': 'stacking_diverse_trained.pkl',
@@ -136,21 +108,17 @@ def cargar_modelos():
         }
     }
     
-    # Verificar qué archivos existen
     for modelo_base, archivos in modelos_base.items():
         modelos_disponibles[modelo_base] = {}
         for num_features, archivo in archivos.items():
             try:
-                # Solo verificar si el archivo existe, no cargar todavía
                 if os.path.exists(archivo):
                     modelos_disponibles[modelo_base][num_features] = archivo
-                    st.write(f"✅ {modelo_base} ({num_features} features) disponible")
                 else:
                     errores.append(f"❌ No se encontró: {archivo}")
             except Exception as e:
                 errores.append(f"❌ Error con {archivo}: {str(e)}")
     
-    # Mostrar errores si los hay
     if errores:
         st.warning("Algunos archivos de modelos no se encontraron:")
         for error in errores:
@@ -159,9 +127,7 @@ def cargar_modelos():
     return modelos_disponibles
 
 def cargar_modelo_especifico(modelo_base, num_features, modelos_disponibles):
-    """
-    Función para cargar un modelo específico cuando se necesite
-    """
+
     try:
         if modelo_base in modelos_disponibles and num_features in modelos_disponibles[modelo_base]:
             archivo = modelos_disponibles[modelo_base][num_features]
@@ -173,28 +139,20 @@ def cargar_modelo_especifico(modelo_base, num_features, modelos_disponibles):
         st.error(f"Error cargando modelo: {e}")
         return None, None
 
-# ============================================================================
-# FUNCIÓN PARA OBTENER EL PESO DE UN MODELO
-# ============================================================================
 
 def obtener_peso_modelo(modelo, nombre_archivo):
     """
     Función para obtener el peso (tamaño) de un modelo
     """
     try:
-        # Obtener el tamaño del archivo en bytes
         tamaño_bytes = os.path.getsize(nombre_archivo)
         
-        # Convertir a MB (megabytes)
         tamaño_mb = tamaño_bytes / (1024 * 1024)
         
         return tamaño_mb
     except:
         return 0.0
 
-# ============================================================================
-# FUNCIÓN PARA MEDIR TIEMPO DE PREDICCIÓN
-# ============================================================================
 
 def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
     """
@@ -203,23 +161,18 @@ def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
     try:
         tiempos = []
         
-        # Hacer varias predicciones para obtener un promedio
         for i in range(repeticiones):
             inicio = time.time()
             modelo.predict(datos_prueba)
             fin = time.time()
             tiempos.append(fin - inicio)
         
-        # Calcular el tiempo promedio en milisegundos
         tiempo_promedio_ms = np.mean(tiempos) * 1000
         
         return tiempo_promedio_ms
     except:
         return 0.0
 
-# ============================================================================
-# FUNCIÓN PARA PROCESAR DATOS DEL CLIENTE
-# ============================================================================
 
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     """
@@ -227,56 +180,43 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     que el modelo pueda entender
     """
     if usar_7_features:
-        # Solo usar las 7 características más importantes
         datos_procesados = []
         
-        # 1. TotalCharges (número)
         datos_procesados.append(float(datos_cliente.get('TotalCharges', 0)))
         
-        # 2. MonthlyCharges (número)
         datos_procesados.append(float(datos_cliente.get('MonthlyCharges', 0)))
         
-        # 3. tenure (número)
         datos_procesados.append(int(datos_cliente.get('tenure', 0)))
         
-        # 4. InternetService (convertir a número: Fiber optic = 1, otros = 0)
         internet = datos_cliente.get('InternetService', 'DSL')
         datos_procesados.append(1 if internet == 'Fiber optic' else 0)
         
-        # 5. PaymentMethod (convertir a número: Electronic check = 1, otros = 0)
         pago = datos_cliente.get('PaymentMethod', 'Electronic check')
         datos_procesados.append(1 if pago == 'Electronic check' else 0)
         
-        # 6. Contract (convertir a número: Two year = 1, otros = 0)
         contrato = datos_cliente.get('Contract', 'Month-to-month')
         datos_procesados.append(1 if contrato == 'Two year' else 0)
         
-        # 7. gender (convertir a número: Male = 1, Female = 0)
         genero = datos_cliente.get('gender', 'Male')
         datos_procesados.append(1 if genero == 'Male' else 0)
         
         return np.array(datos_procesados).reshape(1, -1)
     
     else:
-        # Usar todas las 19 características (versión simplificada)
-        # En una versión real, tendrías que procesar todas las características
-        # Por simplicidad, usamos solo algunas importantes
+  
         datos_procesados = []
         
-        # Características numéricas
         datos_procesados.append(int(datos_cliente.get('SeniorCitizen', 0)))
         datos_procesados.append(int(datos_cliente.get('tenure', 0)))
         datos_procesados.append(float(datos_cliente.get('MonthlyCharges', 0)))
         datos_procesados.append(float(datos_cliente.get('TotalCharges', 0)))
         
-        # Características categóricas convertidas a números (simplificado)
         datos_procesados.append(1 if datos_cliente.get('gender', 'Male') == 'Male' else 0)
         datos_procesados.append(1 if datos_cliente.get('Partner', 'No') == 'Yes' else 0)
         datos_procesados.append(1 if datos_cliente.get('Dependents', 'No') == 'Yes' else 0)
         datos_procesados.append(1 if datos_cliente.get('PhoneService', 'No') == 'Yes' else 0)
         datos_procesados.append(1 if datos_cliente.get('MultipleLines', 'No') == 'Yes' else 0)
         
-        # InternetService (simplificado)
         internet = datos_cliente.get('InternetService', 'DSL')
         if internet == 'DSL':
             datos_procesados.append(0)
@@ -285,7 +225,6 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         else:
             datos_procesados.append(2)
         
-        # Más características categóricas
         datos_procesados.append(1 if datos_cliente.get('OnlineSecurity', 'No') == 'Yes' else 0)
         datos_procesados.append(1 if datos_cliente.get('OnlineBackup', 'No') == 'Yes' else 0)
         datos_procesados.append(1 if datos_cliente.get('DeviceProtection', 'No') == 'Yes' else 0)
@@ -293,7 +232,7 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         datos_procesados.append(1 if datos_cliente.get('StreamingTV', 'No') == 'Yes' else 0)
         datos_procesados.append(1 if datos_cliente.get('StreamingMovies', 'No') == 'Yes' else 0)
         
-        # Contract
+        
         contrato = datos_cliente.get('Contract', 'Month-to-month')
         if contrato == 'Month-to-month':
             datos_procesados.append(0)
@@ -301,16 +240,12 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             datos_procesados.append(1)
         else:
             datos_procesados.append(2)
-        
-        # Últimas características
+   
         datos_procesados.append(1 if datos_cliente.get('PaperlessBilling', 'No') == 'Yes' else 0)
         datos_procesados.append(1 if datos_cliente.get('PaymentMethod', 'Electronic check') == 'Electronic check' else 0)
         
         return np.array(datos_procesados).reshape(1, -1)
 
-# ============================================================================
-# CARGAR DATOS Y MODELOS AL INICIO
-# ============================================================================
 
 # Cargar el dataset
 with st.spinner("Cargando dataset..."):
@@ -327,27 +262,10 @@ else:
 with st.spinner("Cargando modelos de machine learning..."):
     modelos_disponibles = cargar_modelos()
 
-# Mostrar estado de carga
-if len(modelos_disponibles) > 0 and dataset_original is not None:
-    st.success(f"✅ Todo listo: {len(modelos_disponibles)} modelos cargados, {len(dataset_original)} filas de datos procesadas")
-elif len(modelos_disponibles) > 0:
-    st.warning("⚠️ Modelos cargados pero no hay dataset disponible")
-elif dataset_original is not None:
-    st.warning("⚠️ Dataset cargado pero no hay modelos disponibles")
-else:
-    st.error("❌ No se pudieron cargar ni dataset ni modelos. Verifica que los archivos estén en el directorio.")
 
-# ============================================================================
-# VERIFICACIÓN DE REQUISITOS ANTES DE MOSTRAR PESTAÑAS
-# ============================================================================
-
-# Solo mostrar las pestañas si hay al menos dataset O modelos
 total_modelos = sum(len(variantes) for variantes in modelos_disponibles.values())
 if dataset_original is not None or total_modelos > 0:
     
-    # ============================================================================
-    # PESTAÑAS PRINCIPALES
-    # ============================================================================
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "🔮 Predicción", 
@@ -357,9 +275,7 @@ if dataset_original is not None or total_modelos > 0:
         "💡 Dashboard"
     ])
 
-    # ============================================================================
     # PESTAÑA 1: PREDICCIÓN
-    # ============================================================================
 
     with tab1:
         st.header("🔮 Hacer una Predicción")
@@ -368,13 +284,11 @@ if dataset_original is not None or total_modelos > 0:
             st.error("❌ No hay modelos disponibles para hacer predicciones")
             st.info("Por favor, asegúrate de que los archivos .pkl de los modelos estén en el directorio")
         else:
-            # Selectbox para configuración del modelo (ANTES del formulario)
             st.subheader("⚙️ Configuración del Modelo")
             
             col_config1, col_config2 = st.columns(2)
             
             with col_config1:
-                # Selector de modelo base (sin redundancia)
                 modelos_base_disponibles = [modelo for modelo in modelos_disponibles.keys() 
                                           if len(modelos_disponibles[modelo]) > 0]
                 
@@ -389,9 +303,7 @@ if dataset_original is not None or total_modelos > 0:
                     )
             
             with col_config2:
-                # Selector de número de características
                 if modelo_seleccionado:
-                    # Ver qué variantes están disponibles para este modelo
                     variantes_disponibles = list(modelos_disponibles[modelo_seleccionado].keys())
                     
                     opciones_features = []
@@ -412,61 +324,42 @@ if dataset_original is not None or total_modelos > 0:
                 else:
                     tipo_features = None
             
-            # Determinar si usar 7 features o todas
             if tipo_features:
                 usar_7_features = "7 más importantes" in tipo_features
                 num_features_str = '7' if usar_7_features else '19'
                 
-                # Verificar que la combinación esté disponible
-                if modelo_seleccionado and num_features_str in modelos_disponibles[modelo_seleccionado]:
-                    # Mostrar información sobre la selección
-                    if usar_7_features:
-                        st.info("📊 **Usando 7 características principales:** TotalCharges, MonthlyCharges, tenure, InternetService, PaymentMethod, Contract, gender")
-                    else:
-                        st.info("📊 **Usando todas las 19 características** del dataset completo")
                     
-                    st.markdown("---")  # Separador
+                    st.markdown("---")  
             
-            # Dividir en dos columnas para formulario y resultado
             col_formulario, col_resultado = st.columns([2, 1])
             
             with col_formulario:
-                st.subheader("📝 Datos del Cliente")
+                st.subheader("Datos del Cliente")
                 
-                # Formulario condicional basado en el tipo de features seleccionado
                 with st.form("formulario_cliente"):
                     
                     if usar_7_features:
-                        # ============================================================
                         # FORMULARIO SIMPLIFICADO - SOLO 7 CARACTERÍSTICAS
-                        # ============================================================
                         
-                        st.markdown("**💡 Formulario Simplificado - Solo 7 Características Principales**")
+                        st.markdown("** 7 Características Principales**")
                         
-                        # Característica 1: Gender
-                        gender = st.selectbox("👤 Género", ["Male", "Female"])
+                        gender = st.selectbox("Género", ["Male", "Female"])
                         
-                        # Característica 2: Tenure
-                        tenure = st.number_input("📅 Meses como Cliente (tenure)", min_value=0, max_value=100, value=12)
+                        tenure = st.number_input("Tenure", min_value=0, max_value=100, value=12)
                         
-                        # Características 3 y 4: Cargos
                         col_cargos1, col_cargos2 = st.columns(2)
                         with col_cargos1:
-                            MonthlyCharges = st.number_input("💰 Cargo Mensual ($)", min_value=0.0, value=50.0)
+                            MonthlyCharges = st.number_input("Cargo Mensual ($)", min_value=0.0, value=50.0)
                         with col_cargos2:
-                            TotalCharges = st.number_input("💳 Total Cargos ($)", min_value=0.0, value=1000.0)
+                            TotalCharges = st.number_input("Total Cargos ($)", min_value=0.0, value=1000.0)
                         
-                        # Característica 5: Internet Service
-                        InternetService = st.selectbox("🌐 Servicio de Internet", ["DSL", "Fiber optic", "No"])
+                        InternetService = st.selectbox("Servicio de Internet", ["DSL", "Fiber optic", "No"])
                         
-                        # Característica 6: Payment Method
-                        PaymentMethod = st.selectbox("💳 Método de Pago", 
+                        PaymentMethod = st.selectbox("Método de Pago", 
                             ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
                         
-                        # Característica 7: Contract
-                        Contract = st.selectbox("📋 Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
+                        Contract = st.selectbox("Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
                         
-                        # Las demás variables las ponemos con valores por defecto para que el modelo funcione
                         SeniorCitizen = 0
                         Partner = "No"
                         Dependents = "No"
@@ -481,13 +374,10 @@ if dataset_original is not None or total_modelos > 0:
                         PaperlessBilling = "Yes"
                         
                     else:
-                        # ============================================================
                         # FORMULARIO COMPLETO - TODAS LAS 19 CARACTERÍSTICAS
-                        # ============================================================
                         
-                        st.markdown("**📋 Formulario Completo - Todas las Características**")
+                        st.markdown("** Todas las Características**")
                         
-                        # Información básica
                         st.markdown("**👤 Información Personal**")
                         col1, col2 = st.columns(2)
                         
@@ -514,7 +404,6 @@ if dataset_original is not None or total_modelos > 0:
                             OnlineBackup = st.selectbox("Backup Online", ["No", "Yes"])
                             DeviceProtection = st.selectbox("Protección de Dispositivos", ["No", "Yes"])
                         
-                        # Más servicios
                         col5, col6 = st.columns(2)
                         
                         with col5:
@@ -524,7 +413,6 @@ if dataset_original is not None or total_modelos > 0:
                         with col6:
                             StreamingMovies = st.selectbox("Streaming Movies", ["No", "Yes"])
                         
-                        # Contrato y pagos
                         st.markdown("**💳 Contrato y Pagos**")
                         col7, col8 = st.columns(2)
                         
@@ -536,7 +424,6 @@ if dataset_original is not None or total_modelos > 0:
                             PaymentMethod = st.selectbox("Método de Pago", 
                                 ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
                         
-                        # Cargos
                         col9, col10 = st.columns(2)
                         
                         with col9:
@@ -545,14 +432,12 @@ if dataset_original is not None or total_modelos > 0:
                         with col10:
                             TotalCharges = st.number_input("Total Cargos ($)", min_value=0.0, value=1000.0)
                     
-                    # Botón para predecir (igual para ambos formularios)
-                    boton_predecir = st.form_submit_button("🚀 Hacer Predicción", type="primary")
+                    boton_predecir = st.form_submit_button("Predicción", type="primary")
             
             with col_resultado:
                 if boton_predecir and modelo_seleccionado and tipo_features:
-                    st.subheader("📊 Resultado")
+                    st.subheader("Resultado")
                     
-                    # Recopilar todos los datos del cliente
                     datos_cliente = {
                         'SeniorCitizen': SeniorCitizen, 'tenure': tenure, 'MonthlyCharges': MonthlyCharges,
                         'TotalCharges': TotalCharges, 'gender': gender, 'Partner': Partner,
@@ -564,33 +449,27 @@ if dataset_original is not None or total_modelos > 0:
                     }
                     
                     try:
-                        # Cargar el modelo específico
                         modelo, archivo_modelo = cargar_modelo_especifico(modelo_seleccionado, num_features_str, modelos_disponibles)
                         
                         if modelo is None:
                             st.error(f"❌ No se pudo cargar el modelo {modelo_seleccionado} con {num_features_str} características")
                         else:
-                            # Procesar los datos según el tipo de features seleccionado
                             datos_procesados = procesar_datos_cliente(datos_cliente, usar_7_features)
                             
-                            # Hacer la predicción
                             prediccion = modelo.predict(datos_procesados)[0]
                             probabilidades = modelo.predict_proba(datos_procesados)[0]
                             
-                            # Mostrar el resultado
                             if prediccion == 1:
-                                st.error("🔴 **RIESGO ALTO**")
+                                st.error("**RIESGO ALTO**")
                                 st.error("El cliente probablemente abandonará")
                             else:
-                                st.success("🟢 **RIESGO BAJO**")
+                                st.success("**RIESGO BAJO**")
                                 st.success("El cliente probablemente se quedará")
                             
-                            # Mostrar probabilidades
                             st.write("**Probabilidades:**")
-                            st.write(f"📉 No Churn: {probabilidades[0]:.1%}")
-                            st.write(f"📈 Churn: {probabilidades[1]:.1%}")
+                            st.write(f"- No Churn: {probabilidades[0]:.1%}")
+                            st.write(f"- Churn: {probabilidades[1]:.1%}")
                             
-                            # Gráfico simple de probabilidades
                             fig = go.Figure(data=[
                                 go.Bar(x=['No Churn', 'Churn'], 
                                       y=[probabilidades[0], probabilidades[1]],
@@ -599,7 +478,6 @@ if dataset_original is not None or total_modelos > 0:
                             fig.update_layout(title="Probabilidades", height=300)
                             st.plotly_chart(fig, use_container_width=True)
                             
-                            # Información del modelo usado
                             st.info(f"**Modelo usado:** {modelo_seleccionado}")
                             st.info(f"**Features usadas:** {num_features_str}")
                             st.info(f"**Archivo:** {archivo_modelo}")
@@ -614,9 +492,7 @@ if dataset_original is not None or total_modelos > 0:
                         st.warning("⚠️ Selecciona el tipo de características")
                     elif modelo_seleccionado and num_features_str not in modelos_disponibles[modelo_seleccionado]:
                         st.error(f"❌ El modelo {modelo_seleccionado} no está disponible con {num_features_str} características")
-                    else:
-                        st.info("👆 Completa el formulario y haz clic en 'Hacer Predicción'")
-            
+                
 
     # ============================================================================
     # PESTAÑA 2: EDA SIMPLE
