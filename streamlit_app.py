@@ -220,26 +220,20 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     Basada en el entrenamiento sin scaler
     """
     if usar_7_features:
-        # MODELO DE 7 FEATURES
-        # Columnas que quedaron: ['tenure', 'MonthlyCharges', 'TotalCharges', 'InternetService', 'Contract', 'PaymentMethod', 'PaperlessBilling']
-        
-        # 1. Variables numéricas (SIN ESCALAR)
+      
         tenure = int(datos_cliente.get('tenure', 0))
         monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
         total_charges = float(datos_cliente.get('TotalCharges', 0))
         
-        # 2. Variables categóricas (LabelEncoder alfabético)
-        
-        # Contract: ['Month-to-month', 'One year', 'Two year'] -> [0, 1, 2]
+       
         contrato = datos_cliente.get('Contract', 'Month-to-month')
         if contrato == 'Month-to-month':
             contract_encoded = 0
         elif contrato == 'One year':
             contract_encoded = 1
-        else:  # 'Two year'
+        else:  
             contract_encoded = 2
         
-        # InternetService: ['DSL', 'Fiber optic', 'No'] -> [0, 1, 2]
         internet = datos_cliente.get('InternetService', 'DSL')
         if internet == 'DSL':
             internet_encoded = 0
@@ -248,7 +242,6 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         else:  # 'No'
             internet_encoded = 2
         
-        # PaymentMethod: ['Bank transfer (automatic)', 'Credit card (automatic)', 'Electronic check', 'Mailed check'] -> [0, 1, 2, 3]
         pago = datos_cliente.get('PaymentMethod', 'Electronic check')
         if pago == 'Bank transfer (automatic)':
             payment_encoded = 0
@@ -259,38 +252,32 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         else:  # 'Mailed check'
             payment_encoded = 3
         
-        # PaperlessBilling: ['No', 'Yes'] -> [0, 1]
         paperless = datos_cliente.get('PaperlessBilling', 'No')
         paperless_encoded = 1 if paperless == 'Yes' else 0
         
-        # 3. Orden alfabético de columnas (después del processing)
-        # ['Contract', 'InternetService', 'MonthlyCharges', 'PaperlessBilling', 'PaymentMethod', 'TotalCharges', 'tenure']
+       
         datos_procesados = [
-            contract_encoded,      # Contract
-            internet_encoded,      # InternetService
-            monthly_charges,       # MonthlyCharges (sin escalar)
-            paperless_encoded,     # PaperlessBilling
-            payment_encoded,       # PaymentMethod
-            total_charges,         # TotalCharges (sin escalar)
-            tenure                 # tenure (sin escalar)
+            contract_encoded,      
+            internet_encoded,      
+            monthly_charges,       
+            paperless_encoded,     
+            payment_encoded,       
+            total_charges,         
+            tenure                
         ]
         
-        st.write(f"**🔍 Datos 7 features (sin scaler):** {datos_procesados}")
+       
         
         return np.array(datos_procesados).reshape(1, -1)
     
     else:
-        # MODELO DE 19 FEATURES - Todas las columnas originales
         
-        # 1. Variables numéricas (SIN ESCALAR)
         senior_citizen = int(datos_cliente.get('SeniorCitizen', 0))
         tenure = int(datos_cliente.get('tenure', 0))
         monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
         total_charges = float(datos_cliente.get('TotalCharges', 0))
         
-        # 2. Variables categóricas (LabelEncoder alfabético)
         
-        # Contract: ['Month-to-month', 'One year', 'Two year'] -> [0, 1, 2]
         contrato = datos_cliente.get('Contract', 'Month-to-month')
         if contrato == 'Month-to-month':
             contract_encoded = 0
@@ -299,17 +286,13 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         else:
             contract_encoded = 2
         
-        # Dependents: ['No', 'Yes'] -> [0, 1]
         dependents_encoded = 1 if datos_cliente.get('Dependents', 'No') == 'Yes' else 0
         
-        # DeviceProtection: ['No', 'Yes'] -> [0, 1]
         protection_encoded = 1 if datos_cliente.get('DeviceProtection', 'No') == 'Yes' else 0
         
-        # gender: ['Female', 'Male'] -> [0, 1]
         gender = datos_cliente.get('gender', 'Male')
         gender_encoded = 0 if gender == 'Female' else 1
         
-        # InternetService: ['DSL', 'Fiber optic', 'No'] -> [0, 1, 2]
         internet = datos_cliente.get('InternetService', 'DSL')
         if internet == 'DSL':
             internet_encoded = 0
@@ -318,22 +301,16 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         else:
             internet_encoded = 2
         
-        # MultipleLines: ['No', 'Yes'] -> [0, 1]
         multilines_encoded = 1 if datos_cliente.get('MultipleLines', 'No') == 'Yes' else 0
         
-        # OnlineBackup: ['No', 'Yes'] -> [0, 1]
         backup_encoded = 1 if datos_cliente.get('OnlineBackup', 'No') == 'Yes' else 0
         
-        # OnlineSecurity: ['No', 'Yes'] -> [0, 1]
         security_encoded = 1 if datos_cliente.get('OnlineSecurity', 'No') == 'Yes' else 0
         
-        # PaperlessBilling: ['No', 'Yes'] -> [0, 1]
         paperless_encoded = 1 if datos_cliente.get('PaperlessBilling', 'No') == 'Yes' else 0
         
-        # Partner: ['No', 'Yes'] -> [0, 1]
         partner_encoded = 1 if datos_cliente.get('Partner', 'No') == 'Yes' else 0
         
-        # PaymentMethod: ['Bank transfer (automatic)', 'Credit card (automatic)', 'Electronic check', 'Mailed check'] -> [0, 1, 2, 3]
         pago = datos_cliente.get('PaymentMethod', 'Electronic check')
         if pago == 'Bank transfer (automatic)':
             payment_encoded = 0
@@ -344,44 +321,36 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         else:
             payment_encoded = 3
         
-        # PhoneService: ['No', 'Yes'] -> [0, 1]
         phone_encoded = 1 if datos_cliente.get('PhoneService', 'No') == 'Yes' else 0
         
-        # StreamingMovies: ['No', 'Yes'] -> [0, 1]
         movies_encoded = 1 if datos_cliente.get('StreamingMovies', 'No') == 'Yes' else 0
         
-        # StreamingTV: ['No', 'Yes'] -> [0, 1]
         tv_encoded = 1 if datos_cliente.get('StreamingTV', 'No') == 'Yes' else 0
         
-        # TechSupport: ['No', 'Yes'] -> [0, 1]
         support_encoded = 1 if datos_cliente.get('TechSupport', 'No') == 'Yes' else 0
         
-        # 3. Orden alfabético de columnas (19 features después del processing)
-        # ['Contract', 'Dependents', 'DeviceProtection', 'gender', 'InternetService', 'MonthlyCharges', 
-        #  'MultipleLines', 'OnlineBackup', 'OnlineSecurity', 'PaperlessBilling', 'Partner', 
-        #  'PaymentMethod', 'PhoneService', 'SeniorCitizen', 'StreamingMovies', 'StreamingTV', 
-        #  'TechSupport', 'TotalCharges', 'tenure']
+       
         
         datos_procesados = [
-            contract_encoded,      # Contract
-            dependents_encoded,    # Dependents
-            protection_encoded,    # DeviceProtection
-            gender_encoded,        # gender
-            internet_encoded,      # InternetService
-            monthly_charges,       # MonthlyCharges (sin escalar)
-            multilines_encoded,    # MultipleLines
-            backup_encoded,        # OnlineBackup
-            security_encoded,      # OnlineSecurity
-            paperless_encoded,     # PaperlessBilling
-            partner_encoded,       # Partner
-            payment_encoded,       # PaymentMethod
-            phone_encoded,         # PhoneService
-            senior_citizen,        # SeniorCitizen (sin escalar)
-            movies_encoded,        # StreamingMovies
-            tv_encoded,            # StreamingTV
-            support_encoded,       # TechSupport
-            total_charges,         # TotalCharges (sin escalar)
-            tenure                 # tenure (sin escalar)
+            contract_encoded,      
+            dependents_encoded,    
+            protection_encoded,   
+            gender_encoded,        
+            internet_encoded,     
+            monthly_charges,       
+            multilines_encoded,    
+            backup_encoded,        
+            security_encoded,      
+            paperless_encoded,    
+            partner_encoded,       
+            payment_encoded,       
+            phone_encoded,         
+            senior_citizen,       
+            movies_encoded,       
+            tv_encoded,           
+            support_encoded,      
+            total_charges,         
+            tenure                 
         ]
         
         st.write(f"**🔍 Datos 19 features (sin scaler):** {datos_procesados}")
@@ -529,7 +498,7 @@ if dataset_original is not None or total_modelos > 0:
                             Dependents = st.selectbox("Dependientes", ["No", "Yes"])
                             tenure = st.number_input("Meses como Cliente(tenure)", min_value=0, max_value=100, value=12)
                         
-                        # Servicios
+                        
                         st.markdown("**📞 Servicios**")
                         col3, col4 = st.columns(2)
                         
@@ -847,10 +816,8 @@ if dataset_original is not None or total_modelos > 0:
             num_features = "7" if usar_7_features else "19"
             
             
-            # Tabla de métricas comparativa
             st.subheader("Tabla Comparativa de Métricas")
             
-            # Preparar datos para la tabla
             datos_tabla = []
             for modelo, metricas in metricas_actuales.items():
                 datos_tabla.append({
@@ -865,17 +832,14 @@ if dataset_original is not None or total_modelos > 0:
             df_metricas = pd.DataFrame(datos_tabla)
             st.dataframe(df_metricas, use_container_width=True)
             
-            # Gráficos comparativos
             st.subheader("Gráficos Comparativos")
             
-            # Preparar datos para gráficos
             modelos = list(metricas_actuales.keys())
             accuracy_vals = [metricas_actuales[m]['Accuracy'] for m in modelos]
             auc_vals = [metricas_actuales[m]['AUC'] for m in modelos]
             f1_vals = [metricas_actuales[m]['F1-Score'] for m in modelos]
             velocidad_vals = [metricas_actuales[m]['Velocidad_ms'] for m in modelos]
             
-            # Gráfico de barras principal (como en la imagen)
             col_graf1, col_graf2 = st.columns(2)
             
             with col_graf1:
@@ -913,7 +877,7 @@ if dataset_original is not None or total_modelos > 0:
                 st.plotly_chart(fig_metricas, use_container_width=True)
             
             with col_graf2:
-                # Gráfico de velocidad
+              
                 fig_velocidad = px.bar(
                     x=modelos,
                     y=velocidad_vals,
@@ -926,20 +890,19 @@ if dataset_original is not None or total_modelos > 0:
                 fig_velocidad.update_layout(height=500)
                 st.plotly_chart(fig_velocidad, use_container_width=True)
 
-                # Matriz de Confusión
+            
             st.subheader("Matriz de Confusión")
             
             def generar_matriz_confusion(accuracy, f1_score, total_samples=1000):
-                actual_no_churn = int(total_samples * 0.7)  # 700
-                actual_churn = int(total_samples * 0.3)     # 300
+                actual_no_churn = int(total_samples * 0.7)  
+                actual_churn = int(total_samples * 0.3)     
                 
-                # Calcular valores de la matriz basados en accuracy y f1
+     
                 total_correct = int(accuracy * total_samples)
                 
-                # Estimar distribución basada en F1-Score
-                # Para churn prediction, típicamente hay más FN que FP
-                if f1_score > 0.6:  # Buen modelo
-                    tn = int(actual_no_churn * 0.85)  # 85% de TN correctos
+             
+                if f1_score > 0.6:  
+                    tn = int(actual_no_churn * 0.85)  
                     tp = total_correct - tn
                     fp = actual_no_churn - tn
                     fn = actual_churn - tp
@@ -954,7 +917,6 @@ if dataset_original is not None or total_modelos > 0:
                     fp = actual_no_churn - tn
                     fn = actual_churn - tp
                 
-                # Asegurar valores no negativos
                 tp = max(0, tp)
                 tn = max(0, tn)
                 fp = max(0, fp)
@@ -965,11 +927,8 @@ if dataset_original is not None or total_modelos > 0:
            
                 
                
-            
-            # Crear matrices para todos los modelos
             fig_matrices = go.Figure()
             
-            # Subplots para múltiples matrices
             from plotly.subplots import make_subplots
             
             fig_subplots = make_subplots(
@@ -992,13 +951,11 @@ if dataset_original is not None or total_modelos > 0:
                 
                 fig_subplots.add_trace(heatmap, row=1, col=i+1)
             
-            # Actualizar layout
             fig_subplots.update_layout(
                 title_text=f"Comparación de Matrices de Confusión ({num_features} características)",
                 height=400
             )
             
-            # Actualizar ejes para cada subplot
             for i in range(3):
                 fig_subplots.update_xaxes(
                     tickvals=[0, 1], 
@@ -1017,7 +974,6 @@ if dataset_original is not None or total_modelos > 0:
                        'InternetService', 'OnlineSecurity', 'PaperlessBilling']
             importance = [0.505205, 0.187188, 0.169491, 0.047825, 0.032667, 0.008219, 0.007718]
             
-            # Crear gráfico de barras
             fig_importance = px.bar(
                 x=importance,
                 y=features,
@@ -1102,9 +1058,6 @@ if dataset_original is not None or total_modelos > 0:
             
             
 
-    # ============================================================================
-    # INFORMACIÓN ADICIONAL AL FINAL
-    # ============================================================================
 
 # Información del desarrollador
 st.markdown("---")
