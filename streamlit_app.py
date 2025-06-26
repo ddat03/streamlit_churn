@@ -898,7 +898,9 @@ if dataset_original is not None or total_modelos > 0:
             st.error("❌ No hay dataset disponible para el dashboard")
             st.info("Por favor, asegúrate de que el archivo 'WA_Fn-UseC_-Telco-Customer-Churn.csv' esté en el directorio")
         else:
-           
+            # Calcular estadísticas reales del dataset
+            churn_by_contract = dataset_original.groupby('Contract')['Churn'].apply(lambda x: (x == 'Yes').mean())
+            churn_by_internet = dataset_original.groupby('InternetService')['Churn'].apply(lambda x: (x == 'Yes').mean())
             # Gráfico simple de insights
             st.subheader("Señales Principales")
             
@@ -926,9 +928,6 @@ if dataset_original is not None or total_modelos > 0:
             
             col_rec1, col_rec2 = st.columns(2)
             
-            # Calcular estadísticas reales del dataset
-            churn_by_contract = dataset_original.groupby('Contract')['Churn'].apply(lambda x: (x == 'Yes').mean())
-            churn_by_internet = dataset_original.groupby('InternetService')['Churn'].apply(lambda x: (x == 'Yes').mean())
             
             with col_rec1:
                 st.info(f"""
