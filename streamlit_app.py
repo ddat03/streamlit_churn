@@ -194,18 +194,6 @@ def cargar_modelo_especifico(modelo_base, num_features, modelos_disponibles):
         return None, None
 
 
-def obtener_peso_modelo(modelo, nombre_archivo):
-
-    try:
-        tamaño_bytes = os.path.getsize(nombre_archivo)
-        
-        tamaño_mb = tamaño_bytes / (1024 * 1024)
-        
-        return tamaño_mb
-    except:
-        return 0.0
-
-
 def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
     """
     Función para medir cuánto tiempo tarda el modelo en hacer predicciones
@@ -409,7 +397,19 @@ if dataset_original is not None or total_modelos > 0:
                             ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
                         
                         Contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
-                        
+
+                        SeniorCitizen = 0
+                        Partner = "No"
+                        Dependents = "No"
+                        PhoneService = "Yes"
+                        MultipleLines = "No"
+                        OnlineSecurity = "No"
+                        OnlineBackup = "No"
+                        DeviceProtection = "No"
+                        TechSupport = "No"
+                        StreamingTV = "No"
+                        StreamingMovies = "No"
+                        gender = "Male"
 
                         
                     else:
