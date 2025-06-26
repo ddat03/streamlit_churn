@@ -637,61 +637,122 @@ if dataset_original is not None or total_modelos > 0:
                     st.dataframe(df_y, use_container_width=True)
 
     # PESTAÑA 4: MÉTRICAS Y RENDIMIENTO
+    # ============================================================================
 
-        with tab4:
-            st.header("Métricas y Rendimiento")
+    with tab4:
+        st.header("📈 Métricas y Rendimiento de Modelos")
+        
+        if len(modelos_disponibles) == 0:
+            st.error("❌ No hay modelos disponibles para analizar")
+            st.info("Por favor, asegúrate de que los archivos .pkl de los modelos estén en el directorio")
+        else:
+            # Selector de modelo para analizar
+            modelo_analizar = st.selectbox("Selecciona un modelo para analizar:", 
+                                          list(modelos_disponibles.keys()))
             
-            if total_modelos == 0:
-                st.error("❌ No hay modelos disponibles para analizar")
-                st.info("Por favor, asegúrate de que los archivos .pkl de los modelos estén en el directorio")
-            else:
-                # Métricas generales de rendimiento
-                st.subheader("⚡ Métricas de Rendimiento del Sistema")
+            if modelo_analizar:
+                modelo = modelos_disponibles[modelo_analizar]
+                
+                # Crear datos de prueba para medir rendimiento
+                usar_7_features = "(7 Features)" in modelo_analizar
+                datos_prueba = np.random.random((1, 7 if usar_7_features else 19))
+                
+                # Métricas de rendimiento
+                st.subheader("⚡ Métricas de Rendimiento")
                 
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    st.metric("🔢 Total de Modelos", total_modelos)
+                    # Medir tiempo de predicción
+                    tiempo_ms = medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=50)
+                    st.metric("🕐 Tiempo de Predicción", f"{tiempo_ms:.2f} ms")
                 
                 with col2:
-                    # Calcular promedio de características
-                    total_features = sum([len(variantes) for variantes in modelos_disponibles.values()])
-                    st.metric("📊 Variantes Disponibles", total_features)
+                    # Obtener peso del modelo
+                    archivos_peso = {
+                        'Stacking Diverse (Completo)': 'stacking_diverse_trained.pkl',
+                        'Logistic Regression (Completo)': 'Single Classifier (Logistic Regression)_trained.pkl',
+                        'Voting Classifier (Completo)': 'Voting Classifier (Soft)_trained.pkl',
+                        'Stacking Diverse (7 Features)': 'stacking_diverse_trained_7.pkl',
+                        'Logistic Regression (7 Features)': 'Single Classifier_7.pkl',
+                        'Voting Classifier (7 Features)': 'Voting Classifier (Soft)_trained_7.pkl'
+                    }
+                    
+                    archivo_modelo = archivos_peso.get(modelo_analizar, '')
+                    peso_mb = obtener_peso_modelo(modelo, archivo_modelo)
+                    st.metric("📦 Peso del Modelo", f"{peso_mb:.2f} MB")
                 
                 with col3:
-                    # Mostrar tipos de modelos
-                    tipos_modelos = len(modelos_disponibles.keys())
-                    st.metric("🤖 Tipos de Modelos", tipos_modelos)
+                    # Número de features
+                    num_features = 7 if usar_7_features else 19
+                    st.metric("🔢 Número de Features", num_features)
                 
-                # Métricas de precisión simuladas generales
-                st.subheader("🎯 Métricas de Precisión Promedio")
+                # Métricas de precisión simuladas (en un caso real las calcularías con datos de test)
+                st.subheader("🎯 Métricas de Precisión (Simuladas)")
                 
-                # Datos simulados de métricas promedio
-                metricas_promedio = {
-                    'accuracy': 0.845,
-                    'f1': 0.821,
-                    'auc': 0.877
+                # Datos simulados de métricas por modelo
+                metricas_simuladas = {
+                    'Stacking Diverse (Completo)': {'accuracy': 0.862, 'f1': 0.841, 'auc': 0.895},
+                    'Logistic Regression (Completo)': {'accuracy': 0.834, 'f1': 0.812, 'auc': 0.871},
+                    'Voting Classifier (Completo)': {'accuracy': 0.851, 'f1': 0.829, 'auc': 0.883},
+                    'Stacking Diverse (7 Features)': {'accuracy': 0.847, 'f1': 0.823, 'auc': 0.878},
+                    'Logistic Regression (7 Features)': {'accuracy': 0.829, 'f1': 0.805, 'auc': 0.863},
+                    'Voting Classifier (7 Features)': {'accuracy': 0.836, 'f1': 0.814, 'auc': 0.869}
                 }
+                
+                metricas = metricas_simuladas.get(modelo_analizar, 
+                                                {'accuracy': 0.80, 'f1': 0.75, 'auc': 0.85})
                 
                 col4, col5, col6 = st.columns(3)
                 
                 with col4:
-                    st.metric("🎯 Accuracy Promedio", f"{metricas_promedio['accuracy']:.1%}")
+                    st.metric("🎯 Accuracy", f"{metricas['accuracy']:.1%}")
                 
                 with col5:
-                    st.metric("⚖️ F1-Score Promedio", f"{metricas_promedio['f1']:.1%}")
+                    st.metric("⚖️ F1-Score", f"{metricas['f1']:.1%}")
                 
                 with col6:
-                    st.metric("📊 AUC Promedio", f"{metricas_promedio['auc']:.1%}")
+                    st.metric("📊 AUC", f"{metricas['auc']:.1%}")
                 
-                # Información adicional sobre los modelos disponibles
-                st.subheader("📋 Modelos Disponibles")
+                # Gráfico comparativo de todos los modelos
+                st.subheader("📊 Comparación de Todos los Modelos")
                 
-                for modelo_base, variantes in modelos_disponibles.items():
-                    with st.expander(f"🔹 {modelo_base}"):
-                        st.write(f"**Variantes disponibles:** {len(variantes)}")
-                        for num_features in variantes.keys():
-                            st.write(f"- {num_features} características")
+                # Crear tabla comparativa
+                datos_comparacion = []
+                for nombre_modelo, modelo_obj in modelos_disponibles.items():
+                    datos_prueba_modelo = np.random.random((1, 7 if "(7 Features)" in nombre_modelo else 19))
+                    tiempo = medir_tiempo_prediccion(modelo_obj, datos_prueba_modelo, repeticiones=20)
+                    
+                    archivo = archivos_peso.get(nombre_modelo, '')
+                    peso = obtener_peso_modelo(modelo_obj, archivo)
+                    
+                    metricas_modelo = metricas_simuladas.get(nombre_modelo, 
+                                                           {'accuracy': 0.80, 'f1': 0.75, 'auc': 0.85})
+                    
+                    datos_comparacion.append({
+                        'Modelo': nombre_modelo,
+                        'Accuracy': f"{metricas_modelo['accuracy']:.1%}",
+                        'F1-Score': f"{metricas_modelo['f1']:.1%}",
+                        'AUC': f"{metricas_modelo['auc']:.1%}",
+                        'Tiempo (ms)': f"{tiempo:.2f}",
+                        'Peso (MB)': f"{peso:.2f}",
+                        'Features': "7" if "(7 Features)" in nombre_modelo else "19"
+                    })
+                
+                df_comparacion = pd.DataFrame(datos_comparacion)
+                st.dataframe(df_comparacion, use_container_width=True)
+                
+                # Gráfico de barras para comparar accuracy
+                if len(datos_comparacion) > 1:
+                    # Convertir accuracy de string a número para el gráfico
+                    df_comp_graf = df_comparacion.copy()
+                    df_comp_graf['Accuracy_num'] = df_comp_graf['Accuracy'].str.replace('%', '').astype(float)
+                    
+                    fig_comp = px.bar(df_comp_graf, x='Modelo', y='Accuracy_num', 
+                                     title="Comparación de Accuracy por Modelo (%)",
+                                     color='Features')
+                    fig_comp.update_layout(xaxis_tickangle=45)  # Corregido: usar update_layout
+                    st.plotly_chart(fig_comp, use_container_width=True)
 
     # ============================================================================
     # PESTAÑA 5: DASHBOARD SIMPLE
