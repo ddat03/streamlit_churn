@@ -94,9 +94,9 @@ def cargar_modelos():
             '19': 'stacking_diverse_trained.pkl',
             '7': 'stacking_diverse_trained_7.pkl'
         },
-        'Logistic Regression': {
-            '19': 'Single Classifier (Logistic Regression)_trained.pkl',
-            '7': 'Single Classifier_7.pkl'
+        'MLP Classifier': {
+            '19': 'Single Classifier (MLP Classifier)_trained.pkl',
+            '7': 'Single Classifier (MLP Classifier)_trained_7.pkl'
         },
         'Voting Classifier': {
             '19': 'Voting Classifier (Soft)_trained.pkl',
@@ -659,7 +659,7 @@ if dataset_original is not None or total_modelos > 0:
                     'F1-Score': 0.575,
                     'Velocidad_ms': 12.5
                 },
-                'Logistic Regression': {
+                'MLP Classifier': {
                     'Accuracy': 0.775,
                     'AUC': 0.825,
                     'F1-Score': 0.585,
@@ -680,7 +680,7 @@ if dataset_original is not None or total_modelos > 0:
                     'F1-Score': 0.60,
                     'Velocidad_ms': 15.8
                 },
-                'Logistic Regression': {
+                'MLP Classifier': {
                     'Accuracy': 0.74,
                     'AUC': 0.765,
                     'F1-Score': 0.52,
@@ -898,7 +898,7 @@ if dataset_original is not None or total_modelos > 0:
                 # Crear tabla comparativa
                 comparacion_data = []
                 
-                for modelo in ['Stacking Diverse', 'Logistic Regression', 'Voting Classifier']:
+                for modelo in ['Stacking Diverse', 'MLP Classifier', 'Voting Classifier']:
                     if modelo in metricas_7_features and modelo in metricas_19_features:
                         comparacion_data.append({
                             'Modelo': modelo,
