@@ -23,19 +23,32 @@ st.title("Predictor de Churn de Clientes Telco")
 st.markdown("### Evaluacion Final Aprendizaje de Maquina")
 # 5. SIDEBAR CON CONTROLES Y INFORMACIÓN
 st.sidebar.markdown("---")
-st.sidebar.markdown("### ⚙️ Configuración")
+st.sidebar.markdown("### MODELOS")
 
 modelo_info = st.sidebar.selectbox(
     "Ver información del modelo:",
-    ["Stacking Diverse", "Logistic Regression", "Voting Classifier"]
+    ["Stacking Classifier", "Single Classifier", "Voting Classifier"]
 )
 
-if modelo_info == "Stacking Diverse":
+if modelo_info == "Stacking Classifier":
     st.sidebar.markdown("""
     **Stacking Ensemble:**
     - Combina múltiples algoritmos
     - Mayor precisión
     - Más complejo
+    - RandomForestClassifier:
+    max_depth=5, 
+    max_features=None, 
+    min_samples_leaf=3,
+    min_samples_split=4,
+    n_estimators=112
+    -Support Vector Classification:
+    probability=True,
+    random_state=42
+    -Logistic Regression:
+    random_state=42
+    max_iter=1000
+    -Gaussian Naive Bayes
     """)
 
 # Las 19 características completas
