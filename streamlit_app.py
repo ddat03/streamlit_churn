@@ -216,18 +216,29 @@ def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
 
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     """
-    Función corregida para procesar datos EXACTAMENTE como fueron entrenados los modelos
+    Función para convertir datos del cliente usando SOLO LabelEncoder (sin StandardScaler)
+    Basada en el entrenamiento sin scaler
     """
     if usar_7_features:
-        # MODELO DE 7 FEATURES - Orden después de eliminar columnas
-        # Columnas que se mantienen: ['tenure', 'MonthlyCharges', 'TotalCharges', 'InternetService', 'Contract', 'PaymentMethod', 'PaperlessBilling']
+        # MODELO DE 7 FEATURES
+        # Columnas que quedaron: ['tenure', 'MonthlyCharges', 'TotalCharges', 'InternetService', 'Contract', 'PaymentMethod', 'PaperlessBilling']
         
-        # 1. Valores numéricos (antes de StandardScaler)
+        # 1. Variables numéricas (SIN ESCALAR)
         tenure = int(datos_cliente.get('tenure', 0))
         monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
         total_charges = float(datos_cliente.get('TotalCharges', 0))
         
         # 2. Variables categóricas (LabelEncoder alfabético)
+        
+        # Contract: ['Month-to-month', 'One year', 'Two year'] -> [0, 1, 2]
+        contrato = datos_cliente.get('Contract', 'Month-to-month')
+        if contrato == 'Month-to-month':
+            contract_encoded = 0
+        elif contrato == 'One year':
+            contract_encoded = 1
+        else:  # 'Two year'
+            contract_encoded = 2
+        
         # InternetService: ['DSL', 'Fiber optic', 'No'] -> [0, 1, 2]
         internet = datos_cliente.get('InternetService', 'DSL')
         if internet == 'DSL':
@@ -236,15 +247,6 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             internet_encoded = 1
         else:  # 'No'
             internet_encoded = 2
-        
-        # Contract: ['Month-to-month', 'One year', 'Two year'] -> [0, 1, 2]  
-        contrato = datos_cliente.get('Contract', 'Month-to-month')
-        if contrato == 'Month-to-month':
-            contract_encoded = 0
-        elif contrato == 'One year':
-            contract_encoded = 1
-        else:  # 'Two year'
-            contract_encoded = 2
         
         # PaymentMethod: ['Bank transfer (automatic)', 'Credit card (automatic)', 'Electronic check', 'Mailed check'] -> [0, 1, 2, 3]
         pago = datos_cliente.get('PaymentMethod', 'Electronic check')
@@ -261,38 +263,26 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         paperless = datos_cliente.get('PaperlessBilling', 'No')
         paperless_encoded = 1 if paperless == 'Yes' else 0
         
-        # 3. Aplicar StandardScaler (CRITICAL - esto faltaba!)
-        # Necesitas los parámetros mean_ y scale_ del scaler de entrenamiento
-        # Por ahora, valores aproximados del dataset Telco:
-        
-        # Estadísticas aproximadas del dataset Telco para StandardScaler
-        tenure_mean, tenure_std = 32.4, 24.5
-        monthly_mean, monthly_std = 64.8, 30.1  
-        total_mean, total_std = 2283.3, 2266.8
-        
-        tenure_scaled = (tenure - tenure_mean) / tenure_std
-        monthly_scaled = (monthly_charges - monthly_mean) / monthly_std
-        total_scaled = (total_charges - total_mean) / total_std
-        
-        # 4. Orden final (alfabético después de drop)
+        # 3. Orden alfabético de columnas (después del processing)
+        # ['Contract', 'InternetService', 'MonthlyCharges', 'PaperlessBilling', 'PaymentMethod', 'TotalCharges', 'tenure']
         datos_procesados = [
             contract_encoded,      # Contract
-            internet_encoded,      # InternetService  
-            monthly_scaled,        # MonthlyCharges (scaled)
+            internet_encoded,      # InternetService
+            monthly_charges,       # MonthlyCharges (sin escalar)
             paperless_encoded,     # PaperlessBilling
             payment_encoded,       # PaymentMethod
-            tenure_scaled,         # tenure (scaled)
-            total_scaled           # TotalCharges (scaled)
+            total_charges,         # TotalCharges (sin escalar)
+            tenure                 # tenure (sin escalar)
         ]
         
-        st.write(f"**🔍 Datos 7 features (scaled):** {[round(x, 3) for x in datos_procesados]}")
+        st.write(f"**🔍 Datos 7 features (sin scaler):** {datos_procesados}")
         
         return np.array(datos_procesados).reshape(1, -1)
     
     else:
         # MODELO DE 19 FEATURES - Todas las columnas originales
         
-        # 1. Valores numéricos (antes de StandardScaler)
+        # 1. Variables numéricas (SIN ESCALAR)
         senior_citizen = int(datos_cliente.get('SeniorCitizen', 0))
         tenure = int(datos_cliente.get('tenure', 0))
         monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
@@ -300,9 +290,24 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         
         # 2. Variables categóricas (LabelEncoder alfabético)
         
+        # Contract: ['Month-to-month', 'One year', 'Two year'] -> [0, 1, 2]
+        contrato = datos_cliente.get('Contract', 'Month-to-month')
+        if contrato == 'Month-to-month':
+            contract_encoded = 0
+        elif contrato == 'One year':
+            contract_encoded = 1
+        else:
+            contract_encoded = 2
+        
+        # Dependents: ['No', 'Yes'] -> [0, 1]
+        dependents_encoded = 1 if datos_cliente.get('Dependents', 'No') == 'Yes' else 0
+        
+        # DeviceProtection: ['No', 'Yes'] -> [0, 1]
+        protection_encoded = 1 if datos_cliente.get('DeviceProtection', 'No') == 'Yes' else 0
+        
         # gender: ['Female', 'Male'] -> [0, 1]
         gender = datos_cliente.get('gender', 'Male')
-        gender_encoded = 1 if gender == 'Male' else 0
+        gender_encoded = 0 if gender == 'Female' else 1
         
         # InternetService: ['DSL', 'Fiber optic', 'No'] -> [0, 1, 2]
         internet = datos_cliente.get('InternetService', 'DSL')
@@ -313,14 +318,20 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         else:
             internet_encoded = 2
         
-        # Contract: ['Month-to-month', 'One year', 'Two year'] -> [0, 1, 2]
-        contrato = datos_cliente.get('Contract', 'Month-to-month')
-        if contrato == 'Month-to-month':
-            contract_encoded = 0
-        elif contrato == 'One year':
-            contract_encoded = 1
-        else:
-            contract_encoded = 2
+        # MultipleLines: ['No', 'Yes'] -> [0, 1]
+        multilines_encoded = 1 if datos_cliente.get('MultipleLines', 'No') == 'Yes' else 0
+        
+        # OnlineBackup: ['No', 'Yes'] -> [0, 1]
+        backup_encoded = 1 if datos_cliente.get('OnlineBackup', 'No') == 'Yes' else 0
+        
+        # OnlineSecurity: ['No', 'Yes'] -> [0, 1]
+        security_encoded = 1 if datos_cliente.get('OnlineSecurity', 'No') == 'Yes' else 0
+        
+        # PaperlessBilling: ['No', 'Yes'] -> [0, 1]
+        paperless_encoded = 1 if datos_cliente.get('PaperlessBilling', 'No') == 'Yes' else 0
+        
+        # Partner: ['No', 'Yes'] -> [0, 1]
+        partner_encoded = 1 if datos_cliente.get('Partner', 'No') == 'Yes' else 0
         
         # PaymentMethod: ['Bank transfer (automatic)', 'Credit card (automatic)', 'Electronic check', 'Mailed check'] -> [0, 1, 2, 3]
         pago = datos_cliente.get('PaymentMethod', 'Electronic check')
@@ -333,33 +344,31 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         else:
             payment_encoded = 3
         
-        # Resto de variables categóricas binarias (No=0, Yes=1)
-        partner_encoded = 1 if datos_cliente.get('Partner', 'No') == 'Yes' else 0
-        dependents_encoded = 1 if datos_cliente.get('Dependents', 'No') == 'Yes' else 0
+        # PhoneService: ['No', 'Yes'] -> [0, 1]
         phone_encoded = 1 if datos_cliente.get('PhoneService', 'No') == 'Yes' else 0
-        multilines_encoded = 1 if datos_cliente.get('MultipleLines', 'No') == 'Yes' else 0
-        security_encoded = 1 if datos_cliente.get('OnlineSecurity', 'No') == 'Yes' else 0
-        backup_encoded = 1 if datos_cliente.get('OnlineBackup', 'No') == 'Yes' else 0
-        protection_encoded = 1 if datos_cliente.get('DeviceProtection', 'No') == 'Yes' else 0
-        support_encoded = 1 if datos_cliente.get('TechSupport', 'No') == 'Yes' else 0
-        tv_encoded = 1 if datos_cliente.get('StreamingTV', 'No') == 'Yes' else 0
+        
+        # StreamingMovies: ['No', 'Yes'] -> [0, 1]
         movies_encoded = 1 if datos_cliente.get('StreamingMovies', 'No') == 'Yes' else 0
-        paperless_encoded = 1 if datos_cliente.get('PaperlessBilling', 'No') == 'Yes' else 0
         
-        # 3. Aplicar StandardScaler a numéricas
-        senior_scaled = (senior_citizen - 0.162) / 0.369  # Aproximado
-        tenure_scaled = (tenure - 32.4) / 24.5
-        monthly_scaled = (monthly_charges - 64.8) / 30.1
-        total_scaled = (total_charges - 2283.3) / 2266.8
+        # StreamingTV: ['No', 'Yes'] -> [0, 1]
+        tv_encoded = 1 if datos_cliente.get('StreamingTV', 'No') == 'Yes' else 0
         
-        # 4. Orden alfabético de columnas (después de limpieza)
+        # TechSupport: ['No', 'Yes'] -> [0, 1]
+        support_encoded = 1 if datos_cliente.get('TechSupport', 'No') == 'Yes' else 0
+        
+        # 3. Orden alfabético de columnas (19 features después del processing)
+        # ['Contract', 'Dependents', 'DeviceProtection', 'gender', 'InternetService', 'MonthlyCharges', 
+        #  'MultipleLines', 'OnlineBackup', 'OnlineSecurity', 'PaperlessBilling', 'Partner', 
+        #  'PaymentMethod', 'PhoneService', 'SeniorCitizen', 'StreamingMovies', 'StreamingTV', 
+        #  'TechSupport', 'TotalCharges', 'tenure']
+        
         datos_procesados = [
             contract_encoded,      # Contract
             dependents_encoded,    # Dependents
             protection_encoded,    # DeviceProtection
             gender_encoded,        # gender
             internet_encoded,      # InternetService
-            monthly_scaled,        # MonthlyCharges (scaled)
+            monthly_charges,       # MonthlyCharges (sin escalar)
             multilines_encoded,    # MultipleLines
             backup_encoded,        # OnlineBackup
             security_encoded,      # OnlineSecurity
@@ -367,18 +376,17 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             partner_encoded,       # Partner
             payment_encoded,       # PaymentMethod
             phone_encoded,         # PhoneService
-            senior_scaled,         # SeniorCitizen (scaled)
+            senior_citizen,        # SeniorCitizen (sin escalar)
             movies_encoded,        # StreamingMovies
             tv_encoded,            # StreamingTV
             support_encoded,       # TechSupport
-            tenure_scaled,         # tenure (scaled)
-            total_scaled           # TotalCharges (scaled)
+            total_charges,         # TotalCharges (sin escalar)
+            tenure                 # tenure (sin escalar)
         ]
         
-        st.write(f"**🔍 Datos 19 features (scaled):** {[round(x, 3) for x in datos_procesados]}")
+        st.write(f"**🔍 Datos 19 features (sin scaler):** {datos_procesados}")
         
         return np.array(datos_procesados).reshape(1, -1)
-
 # Cargar el dataset
 with st.spinner("Cargando dataset..."):
     dataset_original = cargar_dataset()
