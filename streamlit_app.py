@@ -533,23 +533,23 @@ if total_modelos > 0:
                                 st.success("✅ **RIESGO BAJO**")
                                 st.success("El cliente probablemente se quedará")
                             
-                            st.write("**📈 Probabilidades:**")
-                            st.write(f"- 🟢 No Churn: {probabilidades[0]:.1%}")
-                            st.write(f"- 🔴 Churn: {probabilidades[1]:.1%}")
+                        st.write("**📈 Probabilidades:**")
+                        st.write(f"- 🟢 No Churn: {probabilidades[0]:.1%}")
+                        st.write(f"- 🔴 Churn: {probabilidades[1]:.1%}")
                             
                             # Gráfico de probabilidades
-                            fig = go.Figure(data=[
-                                go.Bar(x=['No Churn', 'Churn'], 
-                                      y=[probabilidades[0], probabilidades[1]],
-                                      marker_color=['green', 'red'])
+                        fig = go.Figure(data=[
+                            go.Bar(x=['No Churn', 'Churn'], 
+                                    y=[probabilidades[0], probabilidades[1]],
+                                    marker_color=['green', 'red'])
                             ])
-                            fig.update_layout(title="Probabilidades de Predicción", height=300)
-                            st.plotly_chart(fig, use_container_width=True)
+                        fig.update_layout(title="Probabilidades de Predicción", height=300)
+                        st.plotly_chart(fig, use_container_width=True)
                             
-                            st.info(f"**🤖 Modelo:** {modelo_seleccionado}")
-                            st.info(f"**📊 Features:** {num_features_str}")
-                        else:
-                            st.error("❌ Error procesando los datos del cliente")
+                        st.info(f"**🤖 Modelo:** {modelo_seleccionado}")
+                        st.info(f"**📊 Features:** {num_features_str}")
+                    else:
+                        st.error("❌ Error procesando los datos del cliente")
                             
                 except Exception as e:
                     st.error(f"❌ Error en la predicción: {e}")
