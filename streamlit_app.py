@@ -25,7 +25,7 @@ st.sidebar.markdown("### MODELOS")
 
 modelo_info = st.sidebar.selectbox(
     "Ver información del modelo:",
-    ["Stacking Classifier", "Single Classifier", "Voting Classifier"]
+    ["Stacking Classifier", "Single Classifier", "Voting Classifier", "A"]
 )
 
 if modelo_info == "Stacking Classifier":
@@ -81,6 +81,25 @@ if modelo_info == "Voting Classifier":
     **SOFT**
 
     
+    """)
+if modelo_info == "A":
+    st.sidebar.markdown("""
+    with st.container():
+    st.write("**Fila 1 - Accuracy**")
+    st.progress(0.795)
+    st.write("79.5%")
+
+    # Fila 2
+    with st.container():
+    st.write("**Fila 2 - AUC**")
+    st.progress(0.835)
+    st.write("83.5%")
+
+    # Fila 3
+    with st.container():
+    st.write("**Fila 3 - F1-Score**")
+    st.progress(0.575)
+    st.write("57.5%")
     """)
 # Las 19 características completas
 FEATURES_COMPLETAS = [
