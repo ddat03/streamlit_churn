@@ -38,7 +38,7 @@ if modelo_info == "Stacking Classifier":
     - n_estimators=112
     
     # Support Vector 
-    # Classification:
+    Classification: #
     - probability=True,
     - random_state=42
     
