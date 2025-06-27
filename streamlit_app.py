@@ -152,7 +152,7 @@ def cargar_modelos():
             '19': 'stacking_diverse_trained.pkl',
             '7': 'stacking_diverse_trained_7.pkl'
         },
-        'MLP Classifier': {
+        'Xgboost': {
             '19': 'Single Classifier (XGBClassifier)_trained.pkl',
             '7': 'Single Classifier (XGBClassifier)_trained_7.pkl'
         },
