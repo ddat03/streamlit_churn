@@ -525,13 +525,16 @@ if total_modelos > 0:
                         st.error(f"❌ No se pudo cargar el modelo {modelo_seleccionado} con {num_features_str} características")
                     else:
                         datos_procesados = procesar_datos_cliente(datos_cliente, usar_7_features)
+
+                        prediccion = modelo.predict(datos_procesados)[0]
+                        probabilidades = modelo.predict_proba(datos_procesados)[0]
                             # Mostrar resultado
                         if prediccion == 1:
-                                st.error("🚨 **RIESGO ALTO**")
-                                st.error("El cliente probablemente abandonará")
+                            st.error("🚨 **RIESGO ALTO**")
+                            st.error("El cliente probablemente abandonará")
                         else:
-                                st.success("✅ **RIESGO BAJO**")
-                                st.success("El cliente probablemente se quedará")
+                            st.success("✅ **RIESGO BAJO**")
+                            st.success("El cliente probablemente se quedará")
                             
                         st.write("**📈 Probabilidades:**")
                         st.write(f"- 🟢 No Churn: {probabilidades[0]:.1%}")
@@ -548,21 +551,21 @@ if total_modelos > 0:
                             
                         st.info(f"**🤖 Modelo:** {modelo_seleccionado}")
                         st.info(f"**📊 Features:** {num_features_str}")
-                        else:
-                            st.error("❌ Error procesando los datos del cliente")
+                    else:
+                        st.error("❌ Error procesando los datos del cliente")
                             
-            except Exception as e:
-                st.error(f"❌ Error en la predicción: {e}")
-                st.error("Verifica que el modelo y las características sean compatibles")
-                st.write("**Detalles del error:**")
-                st.exception(e)
-        else:
-            if not modelo_seleccionado:
-                    t.warning("⚠️ Selecciona un modelo")
-            elif not tipo_features:
-                st.warning("⚠️ Selecciona el tipo de características")
+                except Exception as e:
+                    st.error(f"❌ Error en la predicción: {e}")
+                    st.error("Verifica que el modelo y las características sean compatibles")
+                    st.write("**Detalles del error:**")
+                    st.exception(e)
             else:
-                st.info("👆 Completa el formulario y haz clic en 'Realizar Predicción'")
+                if not modelo_seleccionado:
+                    t.warning("⚠️ Selecciona un modelo")
+                elif not tipo_features:
+                    st.warning("⚠️ Selecciona el tipo de características")
+                else:
+                    st.info("👆 Completa el formulario y haz clic en 'Realizar Predicción'")
                 
 
     # ============================================================================
