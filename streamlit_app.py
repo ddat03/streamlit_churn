@@ -525,13 +525,11 @@ if total_modelos > 0:
                         st.error(f"❌ No se pudo cargar el modelo {modelo_seleccionado} con {num_features_str} características")
                     else:
                         datos_procesados = procesar_datos_cliente(datos_cliente, usar_7_features)
-                        
-               
                             # Mostrar resultado
-                            if prediccion == 1:
+                        if prediccion == 1:
                                 st.error("🚨 **RIESGO ALTO**")
                                 st.error("El cliente probablemente abandonará")
-                            else:
+                        else:
                                 st.success("✅ **RIESGO BAJO**")
                                 st.success("El cliente probablemente se quedará")
                             
