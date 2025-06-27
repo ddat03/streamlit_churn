@@ -192,7 +192,26 @@ def cargar_modelo_especifico(modelo_base, num_features, modelos_disponibles):
     except Exception as e:
         st.error(f"Error cargando modelo: {e}")
         return None, None
-
+        
+def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
+    """
+    Función para medir cuánto tiempo tarda el modelo en hacer predicciones
+    """
+    try:
+        tiempos = []
+        
+        for i in range(repeticiones):
+            inicio = time.time()
+            modelo.predict(datos_prueba)
+            fin = time.time()
+            tiempos.append(fin - inicio)
+        
+        tiempo_promedio_ms = np.mean(tiempos) * 1000
+        
+        return tiempo_promedio_ms
+    except:
+        return 0.0
+        
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     """
     Función para convertir datos del cliente usando SOLO LabelEncoder
@@ -537,7 +556,7 @@ if total_modelos > 0:
                         st.write("**Probabilidades:**")
                         st.write(f"- No Churn: {probabilidades[0]:.1%}")
                         st.write(f"- Churn: {probabilidades[1]:.1%}")
-                            
+                        st.write(f"- tiempades: {tiempo_promedio_ms:.1%}")   
                             # Gráfico de probabilidades
                         fig = go.Figure(data=[
                             go.Bar(x=['No Churn', 'Churn'], 
