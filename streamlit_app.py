@@ -302,11 +302,25 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             support_encoded = 1 if str(datos_cliente.get('TechSupport', 'No')) == 'Yes' else 0
             
             datos_procesados = [
-                gender_encoded, senior_citizen, partner_encoded,dependents_encoded, tenure,
-                phone_encoded, multilines_encoded, internet_encoded, security_encoded,
-                backup_encoded,   protection_encoded, support_encoded, tv_encoded,
-                movies_encoded, contract_encoded,  payment_encoded,
-                monthly_charges,total_charges, paperless_encoded, 
+                gender_encoded, 
+                senior_citizen, 
+                partner_encoded,
+                dependents_encoded, 
+                tenure,
+                phone_encoded, 
+                multilines_encoded, 
+                internet_encoded, 
+                security_encoded,
+                backup_encoded,   
+                protection_encoded, 
+                support_encoded, 
+                tv_encoded,
+                movies_encoded, 
+                contract_encoded,  
+                payment_encoded,
+                monthly_charges,
+                total_charges, 
+                paperless_encoded, 
             ]
         
         # Validar que todos los valores sean numéricos
