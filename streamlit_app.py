@@ -25,13 +25,12 @@ st.sidebar.markdown("### MODELOS")
 
 modelo_info = st.sidebar.selectbox(
     "Ver información del modelo:",
-    ["Stacking Classifier", "Single Classifier", "Voting Classifier", "A"]
+    ["Stacking Classifier", "Single Classifier", "Voting Classifier"]
 )
 
 if modelo_info == "Stacking Classifier":
     st.sidebar.markdown("""
-    # Random Forest 
-    # Classifier:
+    # Random Forest:
     - max_depth=5 
     - max_features=None 
     - min_samples_leaf=3
@@ -57,8 +56,7 @@ if modelo_info == "Stacking Classifier":
 
 if modelo_info == "Single Classifier":
     st.sidebar.markdown("""
-    # Light Gradient 
-    # Boosting Machine:
+    # Light Gradient Boosting Machine:
     - n_estimators=300,
     - max_depth=9,
     - learning_rate=0.1,
@@ -76,8 +74,7 @@ if modelo_info == "Voting Classifier":
     - subsample=0.8
     - colsample_bytree=0.8 
 
-    # Random Forest 
-    # Classifier:
+    # Random Forest:
     - max_depth=5 
     - max_features=None 
     - min_samples_leaf=3
@@ -756,19 +753,19 @@ if total_modelos > 0:
                     'Accuracy': 0.79,
                     'AUC': 0.84,
                     'F1-Score': 0.57,
-                    'Velocidad_ms': 12.5
+                    'Velocidad_ms': 8.52
                 },
                 'LGBMClassifier': {
                     'Accuracy': 0.795,
                     'AUC': 0.835,
                     'F1-Score': 0.575,
-                    'Velocidad_ms': 2.1
+                    'Velocidad_ms': 15.8
                 },
                 'Voting Classifier': {
                     'Accuracy': 0.785,
                     'AUC': 0.835,
                     'F1-Score': 0.55,
-                    'Velocidad_ms': 8.7
+                    'Velocidad_ms': 8.94
                 }
             }
             
@@ -777,19 +774,19 @@ if total_modelos > 0:
                     'Accuracy': 0.805,
                     'AUC': 0.855,
                     'F1-Score': 0.60,
-                    'Velocidad_ms': 15.8
+                    'Velocidad_ms': 10.8
                 },
                 'LGBMClassifier': {
                     'Accuracy': 0.79,
                     'AUC': 0.83,
                     'F1-Score': 0.575,
-                    'Velocidad_ms': 3.2
+                    'Velocidad_ms': 17.7
                 },
                 'Voting Classifier': {
                     'Accuracy': 0.775,
                     'AUC': 0.837,
                     'F1-Score': 0.57,
-                    'Velocidad_ms': 11.4
+                    'Velocidad_ms': 9.5
                 }
             }
             
