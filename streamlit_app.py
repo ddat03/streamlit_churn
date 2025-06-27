@@ -205,9 +205,7 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             
             # Convertir a tipos correctos
             tenure = int(float(datos_cliente.get('tenure', 0)))
-            monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
-            total_charges = float(datos_cliente.get('TotalCharges', 0))
-            
+            monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))            
             # Codificar InternetService
             internet = str(datos_cliente.get('InternetService', 'DSL'))
             if internet == 'DSL':
@@ -249,7 +247,6 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
                 paperless_encoded,   # 3: paperless_encoded
                 payment_encoded,     # 4: payment_encoded
                 monthly_charges,     # 5: monthly_charges
-                total_charges        # 6: total_charges
             ]
             
         else:
@@ -257,7 +254,6 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             senior_citizen = int(float(datos_cliente.get('SeniorCitizen', 0)))
             tenure = int(float(datos_cliente.get('tenure', 0)))
             monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
-            total_charges = float(datos_cliente.get('TotalCharges', 0))
             
             # Codificar todas las variables categóricas
             contrato = str(datos_cliente.get('Contract', 'Month-to-month'))
@@ -319,8 +315,7 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
                 contract_encoded,
                 paperless_encoded,
                 payment_encoded,
-                monthly_charges,
-                total_charges, 
+                monthly_charges, 
                  
             ]
         
@@ -403,8 +398,6 @@ if total_modelos > 0:
                                                min_value=0, max_value=100, value=12, step=1)
                         MonthlyCharges = st.number_input("Cargo Mensual ($)", 
                                                        min_value=0.0, max_value=200.0, value=50.0, step=0.1)
-                        TotalCharges = st.number_input("Cargo Total ($)", 
-                                                     min_value=0.0, max_value=10000.0, value=1000.0, step=0.1)
                     
                     with col_basic2:
                         InternetService = st.selectbox("Servicio de Internet", 
@@ -479,9 +472,7 @@ if total_modelos > 0:
                         MonthlyCharges = st.number_input("Cargo Mensual ($)", 
                                                        min_value=0.0, max_value=200.0, value=50.0, step=0.1)
                     
-                    with col10:
-                        TotalCharges = st.number_input("Cargo Total ($)", 
-                                                     min_value=0.0, max_value=10000.0, value=1000.0, step=0.1)
+                
                 
                 boton_predecir = st.form_submit_button("🔮 Realizar Predicción", type="primary")
         
@@ -494,7 +485,6 @@ if total_modelos > 0:
                     'SeniorCitizen': SeniorCitizen,
                     'tenure': tenure,
                     'MonthlyCharges': MonthlyCharges,
-                    'TotalCharges': TotalCharges,
                     'gender': gender,
                     'Partner': Partner,
                     'Dependents': Dependents,
