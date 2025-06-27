@@ -723,21 +723,21 @@ if total_modelos > 0:
             # Datos predefinidos basados en las imágenes
             metricas_7_features = {
                 'Stacking Diverse': {
-                    'Accuracy': 0.795,
+                    'Accuracy': 0.79,
                     'AUC': 0.84,
-                    'F1-Score': 0.575,
+                    'F1-Score': 0.57,
                     'Velocidad_ms': 12.5
                 },
-                'MLP Classifier': {
-                    'Accuracy': 0.775,
-                    'AUC': 0.825,
-                    'F1-Score': 0.585,
+                'LGBMClassifier': {
+                    'Accuracy': 0.795,
+                    'AUC': 0.835,
+                    'F1-Score': 0.575,
                     'Velocidad_ms': 2.1
                 },
                 'Voting Classifier': {
                     'Accuracy': 0.785,
-                    'AUC': 0.84,
-                    'F1-Score': 0.570,
+                    'AUC': 0.835,
+                    'F1-Score': 0.55,
                     'Velocidad_ms': 8.7
                 }
             }
@@ -745,20 +745,20 @@ if total_modelos > 0:
             metricas_19_features = {
                 'Stacking Diverse': {
                     'Accuracy': 0.805,
-                    'AUC': 0.845,
+                    'AUC': 0.855,
                     'F1-Score': 0.60,
                     'Velocidad_ms': 15.8
                 },
-                'MLP Classifier': {
-                    'Accuracy': 0.74,
-                    'AUC': 0.765,
-                    'F1-Score': 0.52,
+                'LGBMClassifier': {
+                    'Accuracy': 0.79,
+                    'AUC': 0.83,
+                    'F1-Score': 0.575,
                     'Velocidad_ms': 3.2
                 },
                 'Voting Classifier': {
-                    'Accuracy': 0.79,
-                    'AUC': 0.84,
-                    'F1-Score': 0.58,
+                    'Accuracy': 0.775,
+                    'AUC': 0.837,
+                    'F1-Score': 0.57,
                     'Velocidad_ms': 11.4
                 }
             }
