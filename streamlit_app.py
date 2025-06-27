@@ -548,21 +548,21 @@ if total_modelos > 0:
                             
                         st.info(f"**🤖 Modelo:** {modelo_seleccionado}")
                         st.info(f"**📊 Features:** {num_features_str}")
-                    else:
-                        st.error("❌ Error procesando los datos del cliente")
-                            
-                except Exception as e:
-                    st.error(f"❌ Error en la predicción: {e}")
-                    st.error("Verifica que el modelo y las características sean compatibles")
-                    st.write("**Detalles del error:**")
-                    st.exception(e)
-            else:
-                if not modelo_seleccionado:
-                    st.warning("⚠️ Selecciona un modelo")
-                elif not tipo_features:
-                    st.warning("⚠️ Selecciona el tipo de características")
                 else:
-                    st.info("👆 Completa el formulario y haz clic en 'Realizar Predicción'")
+                    st.error("❌ Error procesando los datos del cliente")
+                            
+            except Exception as e:
+                st.error(f"❌ Error en la predicción: {e}")
+                st.error("Verifica que el modelo y las características sean compatibles")
+                st.write("**Detalles del error:**")
+                st.exception(e)
+        else:
+            if not modelo_seleccionado:
+                    t.warning("⚠️ Selecciona un modelo")
+            elif not tipo_features:
+                st.warning("⚠️ Selecciona el tipo de características")
+            else:
+                st.info("👆 Completa el formulario y haz clic en 'Realizar Predicción'")
                 
 
     # ============================================================================
