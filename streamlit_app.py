@@ -224,18 +224,6 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     if usar_7_features:
       
         tenure = int(datos_cliente.get('tenure', 0))
-        monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
-        total_charges = float(datos_cliente.get('TotalCharges', 0))
-        
-       
-        contrato = datos_cliente.get('Contract', 'Month-to-month')
-        if contrato == 'Month-to-month':
-            contract_encoded = 0
-        elif contrato == 'One year':
-            contract_encoded = 1
-        else:  
-            contract_encoded = 2
-        
         internet = datos_cliente.get('InternetService', 'DSL')
         if internet == 'DSL':
             internet_encoded = 0
@@ -243,7 +231,16 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             internet_encoded = 1
         else:  # 'No'
             internet_encoded = 2
-        
+
+        contrato = datos_cliente.get('Contract', 'Month-to-month')
+        if contrato == 'Month-to-month':
+            contract_encoded = 0
+        elif contrato == 'One year':
+            contract_encoded = 1
+        else:  
+            contract_encoded = 2
+        paperless = datos_cliente.get('PaperlessBilling', 'No')
+        paperless_encoded = 1 if paperless == 'Yes' else 0
         pago = datos_cliente.get('PaymentMethod', 'Electronic check')
         if pago == 'Bank transfer (automatic)':
             payment_encoded = 0
@@ -253,19 +250,19 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             payment_encoded = 2
         else:  # 'Mailed check'
             payment_encoded = 3
-        
-        paperless = datos_cliente.get('PaperlessBilling', 'No')
-        paperless_encoded = 1 if paperless == 'Yes' else 0
+        monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
+        total_charges = float(datos_cliente.get('TotalCharges', 0))
         
        
         datos_procesados = [
+            tenure,
+            internet_encoded,
             contract_encoded,      
-            internet_encoded,      
+            paperless_encoded,      
+            payment_encoded,  
             monthly_charges,       
-            paperless_encoded,     
-            payment_encoded,       
             total_charges,         
-            tenure                
+                            
         ]
         
        
@@ -450,24 +447,19 @@ if dataset_original is not None or total_modelos > 0:
                         # FORMULARIO SIMPLIFICADO - SOLO 7 CARACTERÍSTICAS
                         
                         st.markdown("** 7 Características Principales**")
-                        
-                        PaperlessBilling = st.selectbox("PaperlessBilling", ["Yes", "No"])
-                        
+                    
                         tenure = st.number_input("Tenure", min_value=0, max_value=100, value=12)
-                        
+                        InternetService = st.selectbox("InternetService", ["DSL", "Fiber optic", "No"])
+                        Contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
+                        PaperlessBilling = st.selectbox("PaperlessBilling", ["Yes", "No"])
+                        PaymentMethod = st.selectbox("PaymentMethod", 
+                            ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
                         col_cargos1, col_cargos2 = st.columns(2)
                         with col_cargos1:
                             MonthlyCharges = st.number_input("MonthlyCharges ($)", min_value=0.0, value=50.0)
                         with col_cargos2:
                             TotalCharges = st.number_input("TotalCharges ($)", min_value=0.0, value=1000.0)
                         
-                        InternetService = st.selectbox("InternetService", ["DSL", "Fiber optic", "No"])
-                        
-                        PaymentMethod = st.selectbox("PaymentMethod", 
-                            ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
-                        
-                        Contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
-
                         SeniorCitizen = 0
                         Partner = "No"
                         Dependents = "No"
