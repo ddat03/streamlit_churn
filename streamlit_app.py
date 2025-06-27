@@ -559,7 +559,7 @@ if total_modelos > 0:
                         st.write(f"- Churn: {probabilidades[1]:.1%}")
                         st.write(f"- Churn: {probabilidades[1]:.1%}")
                         st.write("**Tiempo de ejecucion:**")
-                        st.write(f"- {tiempo_ms:.1%}")
+                        st.write(f"- {tiempo_ms:} ms")
                         
                             # Gráfico de probabilidades
                         fig = go.Figure(data=[
