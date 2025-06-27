@@ -400,7 +400,7 @@ if total_modelos > 0:
             with st.form("formulario_cliente"):
                 if usar_7_features:
                     # FORMULARIO SIMPLIFICADO - SOLO 7 CARACTERÍSTICAS
-                    st.markdown("**📊 7 Características Principales**")
+                    st.markdown("**7 Características Principales**")
                     
                     col_basic1, col_basic2 = st.columns(2)
                     with col_basic1:
@@ -488,7 +488,7 @@ if total_modelos > 0:
         
         with col_resultado:
             if boton_predecir and modelo_seleccionado and tipo_features:
-                st.subheader("📊 Resultado")
+                st.subheader("Resultado")
                 
                 # Crear diccionario con TODOS los datos
                 datos_cliente = {
@@ -513,9 +513,7 @@ if total_modelos > 0:
                 }
                 
                 # DEBUG: Mostrar datos procesados
-                if st.checkbox("🔍 Mostrar datos procesados (debug)", key="debug_datos"):
-                    st.write("**Datos del formulario:**")
-                    st.json(datos_cliente)
+                
                 
                 try:
                     modelo, archivo_modelo = cargar_modelo_especifico(
@@ -530,15 +528,15 @@ if total_modelos > 0:
                         probabilidades = modelo.predict_proba(datos_procesados)[0]
                             # Mostrar resultado
                         if prediccion == 1:
-                            st.error("🚨 **RIESGO ALTO**")
+                            st.error("**RIESGO ALTO**")
                             st.error("El cliente probablemente abandonará")
                         else:
-                            st.success("✅ **RIESGO BAJO**")
+                            st.success("**RIESGO BAJO**")
                             st.success("El cliente probablemente se quedará")
                             
-                        st.write("**📈 Probabilidades:**")
-                        st.write(f"- 🟢 No Churn: {probabilidades[0]:.1%}")
-                        st.write(f"- 🔴 Churn: {probabilidades[1]:.1%}")
+                        st.write("**Probabilidades:**")
+                        st.write(f"- No Churn: {probabilidades[0]:.1%}")
+                        st.write(f"- Churn: {probabilidades[1]:.1%}")
                             
                             # Gráfico de probabilidades
                         fig = go.Figure(data=[
@@ -549,8 +547,8 @@ if total_modelos > 0:
                         fig.update_layout(title="Probabilidades de Predicción", height=300)
                         st.plotly_chart(fig, use_container_width=True)
                             
-                        st.info(f"**🤖 Modelo:** {modelo_seleccionado}")
-                        st.info(f"**📊 Features:** {num_features_str}")
+                        st.info(f"**Modelo:** {modelo_seleccionado}")
+                        st.info(f"**Features:** {num_features_str}")
                     
                             
                 except Exception as e:
@@ -558,13 +556,7 @@ if total_modelos > 0:
                     st.error("Verifica que el modelo y las características sean compatibles")
                     st.write("**Detalles del error:**")
                     st.exception(e)
-            else:
-                if not modelo_seleccionado:
-                    t.warning("⚠️ Selecciona un modelo")
-                elif not tipo_features:
-                    st.warning("⚠️ Selecciona el tipo de características")
-                else:
-                    st.info("👆 Completa el formulario y haz clic en 'Realizar Predicción'")
+           
                 
 
     # ============================================================================
