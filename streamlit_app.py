@@ -37,18 +37,15 @@ if modelo_info == "Stacking Classifier":
     - min_samples_split=4
     - n_estimators=112
     
-    # Support Vector 
-    Classification: #
+    # Support Vector Classification: 
     - probability=True,
     - random_state=42
     
-    # Logistic 
-    # Regression:
+    # Logistic Regression:
     - random_state=42
     - max_iter=1000
     
-    # Gaussian Naive 
-    #Bayes
+    # Gaussian Naive Bayes
 
     # META CLASSIFIER
     **Logistic Regression
