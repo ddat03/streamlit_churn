@@ -557,15 +557,10 @@ if total_modelos > 0:
                         st.write("**Probabilidades:**")
                         st.write(f"- No Churn: {probabilidades[0]:.1%}")
                         st.write(f"- Churn: {probabilidades[1]:.1%}")
-                        st.text_area(
-                        "⏱️ Tiempo de Predicción", 
-                        f"Tiempo promedio: {tiempo_ms:.2f} ms\n"
-                        f"Velocidad: {1000/tiempo_ms:.0f} predicciones/segundo\n"
-                        f"Modelo: {modelo_seleccionado}\n"
-                        f"Features: {num_features_str}",
-                        height=100,
-                        disabled=True
-                        )
+                        st.write(f"- Churn: {probabilidades[1]:.1%}")
+                        st.write("**Tiempo de ejecucion:**")
+                        st.write(f"- {tiempo_ms:.1%}")
+                        
                             # Gráfico de probabilidades
                         fig = go.Figure(data=[
                             go.Bar(x=['No Churn', 'Churn'], 
