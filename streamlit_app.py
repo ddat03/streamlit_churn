@@ -323,12 +323,6 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
                 paperless_encoded, 
             ]
         
-        # Validar que todos los valores sean numéricos
-        for i, valor in enumerate(datos_procesados):
-            if not isinstance(valor, (int, float)):
-                st.error(f"Error: Valor no numérico en posición {i}: {valor}")
-                return None
-        
         return np.array(datos_procesados).reshape(1, -1)
         
     except Exception as e:
