@@ -30,30 +30,35 @@ modelo_info = st.sidebar.selectbox(
 
 if modelo_info == "Stacking Classifier":
     st.sidebar.markdown("""
-    # RandomForestClassifier:**
+    # Random Forest 
+    # Classifier:
     - max_depth=5 
     - max_features=None 
     - min_samples_leaf=3
     - min_samples_split=4
     - n_estimators=112
     
-    # Support Vector Classification:**
+    # Support Vector 
+    # Classification:
     - probability=True,
     - random_state=42
     
-    # Logistic Regression:**
+    # Logistic 
+    # Regression:
     - random_state=42
     - max_iter=1000
     
-    # Gaussian Naive Bayes**
+    # Gaussian Naive 
+    #Bayes
 
     # META CLASSIFIER
-    **Logistic Regression**
+    **Logistic Regression
     """)
 
 if modelo_info == "Single Classifier":
     st.sidebar.markdown("""
-    # Light Gradient Boosting Machine:
+    # Light Gradient 
+    # Boosting Machine:
     - n_estimators=300,
     - max_depth=9,
     - learning_rate=0.1,
@@ -63,7 +68,7 @@ if modelo_info == "Single Classifier":
 
 if modelo_info == "Voting Classifier":
     st.sidebar.markdown("""
-    # XGBRegressor:**
+    # XGBRegressor:
     - n_estimators=100      
     - learning_rate=0.1
     - max_depth=15                
@@ -71,7 +76,8 @@ if modelo_info == "Voting Classifier":
     - subsample=0.8
     - colsample_bytree=0.8 
 
-    # RandomForestClassifier:**
+    # Random Forest 
+    # Classifier:
     - max_depth=5 
     - max_features=None 
     - min_samples_leaf=3
