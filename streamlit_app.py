@@ -548,8 +548,8 @@ if total_modelos > 0:
                             
                         st.info(f"**🤖 Modelo:** {modelo_seleccionado}")
                         st.info(f"**📊 Features:** {num_features_str}")
-                    else:
-                        st.error("❌ Error procesando los datos del cliente")
+                        else:
+                            st.error("❌ Error procesando los datos del cliente")
                             
             except Exception as e:
                 st.error(f"❌ Error en la predicción: {e}")
