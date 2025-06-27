@@ -545,6 +545,7 @@ if total_modelos > 0:
 
                         prediccion = modelo.predict(datos_procesados)[0]
                         probabilidades = modelo.predict_proba(datos_procesados)[0]
+                        tiempo_ms = medir_tiempo_prediccion(modelo, datos_procesados, repeticiones=50)
                             # Mostrar resultado
                         if prediccion == 1:
                             st.error("**RIESGO ALTO**")
@@ -556,7 +557,15 @@ if total_modelos > 0:
                         st.write("**Probabilidades:**")
                         st.write(f"- No Churn: {probabilidades[0]:.1%}")
                         st.write(f"- Churn: {probabilidades[1]:.1%}")
-                        st.write(f"- tiempades: {tiempo_promedio_ms:.1%}")   
+                        st.text_area(
+                        "⏱️ Tiempo de Predicción", 
+                        f"Tiempo promedio: {tiempo_ms:.2f} ms\n"
+                        f"Velocidad: {1000/tiempo_ms:.0f} predicciones/segundo\n"
+                        f"Modelo: {modelo_seleccionado}\n"
+                        f"Features: {num_features_str}",
+                        height=100,
+                        disabled=True
+                        )
                             # Gráfico de probabilidades
                         fig = go.Figure(data=[
                             go.Bar(x=['No Churn', 'Churn'], 
