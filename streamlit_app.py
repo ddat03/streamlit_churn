@@ -316,11 +316,12 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
                 support_encoded, 
                 tv_encoded,
                 movies_encoded, 
-                contract_encoded,  
+                contract_encoded,
+                paperless_encoded,
                 payment_encoded,
                 monthly_charges,
                 total_charges, 
-                paperless_encoded, 
+                 
             ]
         
         return np.array(datos_procesados).reshape(1, -1)
