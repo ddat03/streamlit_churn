@@ -526,15 +526,7 @@ if total_modelos > 0:
                     else:
                         datos_procesados = procesar_datos_cliente(datos_cliente, usar_7_features)
                         
-                        if datos_procesados is not None:
-                            # DEBUG: Mostrar array procesado
-                            if st.checkbox("🔍 Ver array procesado", key="debug_array"):
-                                st.write("**Array para predicción:**")
-                                st.write(datos_procesados)
-                            
-                            prediccion = modelo.predict(datos_procesados)[0]
-                            probabilidades = modelo.predict_proba(datos_procesados)[0]
-                            
+               
                             # Mostrar resultado
                             if prediccion == 1:
                                 st.error("🚨 **RIESGO ALTO**")
