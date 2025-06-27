@@ -503,7 +503,7 @@ if total_modelos > 0:
                     
                 
                 
-                boton_predecir = st.form_submit_button("🔮 Realizar Predicción", type="primary")
+                boton_predecir = st.form_submit_button("Predicción", type="primary")
         
         with col_resultado:
             if boton_predecir and modelo_seleccionado and tipo_features:
@@ -559,7 +559,7 @@ if total_modelos > 0:
                         st.write(f"- Churn: {probabilidades[1]:.1%}")
                         st.write(f"- Churn: {probabilidades[1]:.1%}")
                         st.write("**Tiempo de ejecucion:**")
-                        st.write(f"- {tiempo_ms:} ms")
+                        st.write(f"- {tiempo_ms:.2f} ms")
                         
                             # Gráfico de probabilidades
                         fig = go.Figure(data=[
