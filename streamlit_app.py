@@ -326,6 +326,16 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
         st.error(f"Datos recibidos: {datos_cliente}")
         return None
 
+with st.spinner("Cargando dataset..."):
+    dataset_original = cargar_dataset()
+
+# Limpiar los datos
+if dataset_original is not None:
+    with st.spinner("Limpiando datos..."):
+        X_limpio, y_limpio = limpiar_datos(dataset_original)
+else:
+    X_limpio, y_limpio = None, None
+
 # INTERFAZ PRINCIPAL
 with st.spinner("Cargando modelos de machine learning..."):
     modelos_disponibles = cargar_modelos()
