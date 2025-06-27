@@ -142,10 +142,9 @@ def limpiar_datos(df_original):
     
     return X, y
 
-
+ 
 @st.cache_resource  
 def cargar_modelos():
-
     modelos_disponibles = {}
     errores = []
     
@@ -183,7 +182,6 @@ def cargar_modelos():
     return modelos_disponibles
 
 def cargar_modelo_especifico(modelo_base, num_features, modelos_disponibles):
-
     try:
         if modelo_base in modelos_disponibles and num_features in modelos_disponibles[modelo_base]:
             archivo = modelos_disponibles[modelo_base][num_features]
@@ -195,404 +193,377 @@ def cargar_modelo_especifico(modelo_base, num_features, modelos_disponibles):
         st.error(f"Error cargando modelo: {e}")
         return None, None
 
-
-def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
-    """
-    Función para medir cuánto tiempo tarda el modelo en hacer predicciones
-    """
-    try:
-        tiempos = []
-        
-        for i in range(repeticiones):
-            inicio = time.time()
-            modelo.predict(datos_prueba)
-            fin = time.time()
-            tiempos.append(fin - inicio)
-        
-        tiempo_promedio_ms = np.mean(tiempos) * 1000
-        
-        return tiempo_promedio_ms
-    except:
-        return 0.0
-
-
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
     """
-    Función para convertir datos del cliente usando SOLO LabelEncoder (sin StandardScaler)
-    Basada en el entrenamiento sin scaler
+    Función para convertir datos del cliente usando SOLO LabelEncoder
+    CRÍTICO: El orden debe coincidir EXACTAMENTE con el entrenamiento
     """
-    if usar_7_features:
-      
-        tenure = int(datos_cliente.get('tenure', 0))
-        internet = datos_cliente.get('InternetService', 'DSL')
-        if internet == 'DSL':
-            internet_encoded = 0
-        elif internet == 'Fiber optic':
-            internet_encoded = 1
-        else:  # 'No'
-            internet_encoded = 2
+    try:
+        if usar_7_features:
+            # ORDEN EXACTO DEL ENTRENAMIENTO - 7 CARACTERÍSTICAS
+            # [tenure, internet_encoded, contract_encoded, paperless_encoded, payment_encoded, monthly_charges, total_charges]
+            
+            # Convertir a tipos correctos
+            tenure = int(float(datos_cliente.get('tenure', 0)))
+            monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
+            total_charges = float(datos_cliente.get('TotalCharges', 0))
+            
+            # Codificar InternetService
+            internet = str(datos_cliente.get('InternetService', 'DSL'))
+            if internet == 'DSL':
+                internet_encoded = 0
+            elif internet == 'Fiber optic':
+                internet_encoded = 1
+            else:  # 'No'
+                internet_encoded = 2
 
-        contrato = datos_cliente.get('Contract', 'Month-to-month')
-        if contrato == 'Month-to-month':
-            contract_encoded = 0
-        elif contrato == 'One year':
-            contract_encoded = 1
-        else:  
-            contract_encoded = 2
-        paperless = datos_cliente.get('PaperlessBilling', 'No')
-        paperless_encoded = 1 if paperless == 'Yes' else 0
-        pago = datos_cliente.get('PaymentMethod', 'Electronic check')
-        if pago == 'Bank transfer (automatic)':
-            payment_encoded = 0
-        elif pago == 'Credit card (automatic)':
-            payment_encoded = 1
-        elif pago == 'Electronic check':
-            payment_encoded = 2
-        else:  # 'Mailed check'
-            payment_encoded = 3
-        monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
-        total_charges = float(datos_cliente.get('TotalCharges', 0))
+            # Codificar Contract
+            contrato = str(datos_cliente.get('Contract', 'Month-to-month'))
+            if contrato == 'Month-to-month':
+                contract_encoded = 0
+            elif contrato == 'One year':
+                contract_encoded = 1
+            else:  # 'Two year'
+                contract_encoded = 2
+            
+            # Codificar PaperlessBilling
+            paperless = str(datos_cliente.get('PaperlessBilling', 'No'))
+            paperless_encoded = 1 if paperless == 'Yes' else 0
+            
+            # Codificar PaymentMethod
+            pago = str(datos_cliente.get('PaymentMethod', 'Electronic check'))
+            if pago == 'Bank transfer (automatic)':
+                payment_encoded = 0
+            elif pago == 'Credit card (automatic)':
+                payment_encoded = 1
+            elif pago == 'Electronic check':
+                payment_encoded = 2
+            else:  # 'Mailed check'
+                payment_encoded = 3
+            
+            # ORDEN EXACTO DEL ENTRENAMIENTO
+            datos_procesados = [
+                tenure,              # 0: tenure
+                internet_encoded,    # 1: internet_encoded
+                contract_encoded,    # 2: contract_encoded
+                paperless_encoded,   # 3: paperless_encoded
+                payment_encoded,     # 4: payment_encoded
+                monthly_charges,     # 5: monthly_charges
+                total_charges        # 6: total_charges
+            ]
+            
+        else:
+            # ORDEN PARA 19 CARACTERÍSTICAS (mantener el original si funciona)
+            senior_citizen = int(float(datos_cliente.get('SeniorCitizen', 0)))
+            tenure = int(float(datos_cliente.get('tenure', 0)))
+            monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
+            total_charges = float(datos_cliente.get('TotalCharges', 0))
+            
+            # Codificar todas las variables categóricas
+            contrato = str(datos_cliente.get('Contract', 'Month-to-month'))
+            if contrato == 'Month-to-month':
+                contract_encoded = 0
+            elif contrato == 'One year':
+                contract_encoded = 1
+            else:
+                contract_encoded = 2
+            
+            dependents_encoded = 1 if str(datos_cliente.get('Dependents', 'No')) == 'Yes' else 0
+            protection_encoded = 1 if str(datos_cliente.get('DeviceProtection', 'No')) == 'Yes' else 0
+            gender_encoded = 0 if str(datos_cliente.get('gender', 'Male')) == 'Female' else 1
+            
+            internet = str(datos_cliente.get('InternetService', 'DSL'))
+            if internet == 'DSL':
+                internet_encoded = 0
+            elif internet == 'Fiber optic':
+                internet_encoded = 1
+            else:
+                internet_encoded = 2
+            
+            multilines_encoded = 1 if str(datos_cliente.get('MultipleLines', 'No')) == 'Yes' else 0
+            backup_encoded = 1 if str(datos_cliente.get('OnlineBackup', 'No')) == 'Yes' else 0
+            security_encoded = 1 if str(datos_cliente.get('OnlineSecurity', 'No')) == 'Yes' else 0
+            paperless_encoded = 1 if str(datos_cliente.get('PaperlessBilling', 'No')) == 'Yes' else 0
+            partner_encoded = 1 if str(datos_cliente.get('Partner', 'No')) == 'Yes' else 0
+            
+            pago = str(datos_cliente.get('PaymentMethod', 'Electronic check'))
+            if pago == 'Bank transfer (automatic)':
+                payment_encoded = 0
+            elif pago == 'Credit card (automatic)':
+                payment_encoded = 1
+            elif pago == 'Electronic check':
+                payment_encoded = 2
+            else:
+                payment_encoded = 3
+            
+            phone_encoded = 1 if str(datos_cliente.get('PhoneService', 'No')) == 'Yes' else 0
+            movies_encoded = 1 if str(datos_cliente.get('StreamingMovies', 'No')) == 'Yes' else 0
+            tv_encoded = 1 if str(datos_cliente.get('StreamingTV', 'No')) == 'Yes' else 0
+            support_encoded = 1 if str(datos_cliente.get('TechSupport', 'No')) == 'Yes' else 0
+            
+            datos_procesados = [
+                contract_encoded, dependents_encoded, protection_encoded, gender_encoded,
+                internet_encoded, monthly_charges, multilines_encoded, backup_encoded,
+                security_encoded, paperless_encoded, partner_encoded, payment_encoded,
+                phone_encoded, senior_citizen, movies_encoded, tv_encoded,
+                support_encoded, total_charges, tenure
+            ]
         
-       
-        datos_procesados = [
-            tenure,
-            internet_encoded,
-            contract_encoded,      
-            paperless_encoded,      
-            payment_encoded,  
-            monthly_charges,       
-            total_charges,         
-                            
-        ]
-        
-       
+        # Validar que todos los valores sean numéricos
+        for i, valor in enumerate(datos_procesados):
+            if not isinstance(valor, (int, float)):
+                st.error(f"Error: Valor no numérico en posición {i}: {valor}")
+                return None
         
         return np.array(datos_procesados).reshape(1, -1)
-    
-    else:
         
-        senior_citizen = int(datos_cliente.get('SeniorCitizen', 0))
-        tenure = int(datos_cliente.get('tenure', 0))
-        monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
-        total_charges = float(datos_cliente.get('TotalCharges', 0))
-        
-        
-        contrato = datos_cliente.get('Contract', 'Month-to-month')
-        if contrato == 'Month-to-month':
-            contract_encoded = 0
-        elif contrato == 'One year':
-            contract_encoded = 1
-        else:
-            contract_encoded = 2
-        
-        dependents_encoded = 1 if datos_cliente.get('Dependents', 'No') == 'Yes' else 0
-        
-        protection_encoded = 1 if datos_cliente.get('DeviceProtection', 'No') == 'Yes' else 0
-        
-        gender = datos_cliente.get('gender', 'Male')
-        gender_encoded = 0 if gender == 'Female' else 1
-        
-        internet = datos_cliente.get('InternetService', 'DSL')
-        if internet == 'DSL':
-            internet_encoded = 0
-        elif internet == 'Fiber optic':
-            internet_encoded = 1
-        else:
-            internet_encoded = 2
-        
-        multilines_encoded = 1 if datos_cliente.get('MultipleLines', 'No') == 'Yes' else 0
-        
-        backup_encoded = 1 if datos_cliente.get('OnlineBackup', 'No') == 'Yes' else 0
-        
-        security_encoded = 1 if datos_cliente.get('OnlineSecurity', 'No') == 'Yes' else 0
-        
-        paperless_encoded = 1 if datos_cliente.get('PaperlessBilling', 'No') == 'Yes' else 0
-        
-        partner_encoded = 1 if datos_cliente.get('Partner', 'No') == 'Yes' else 0
-        
-        pago = datos_cliente.get('PaymentMethod', 'Electronic check')
-        if pago == 'Bank transfer (automatic)':
-            payment_encoded = 0
-        elif pago == 'Credit card (automatic)':
-            payment_encoded = 1
-        elif pago == 'Electronic check':
-            payment_encoded = 2
-        else:
-            payment_encoded = 3
-        
-        phone_encoded = 1 if datos_cliente.get('PhoneService', 'No') == 'Yes' else 0
-        
-        movies_encoded = 1 if datos_cliente.get('StreamingMovies', 'No') == 'Yes' else 0
-        
-        tv_encoded = 1 if datos_cliente.get('StreamingTV', 'No') == 'Yes' else 0
-        
-        support_encoded = 1 if datos_cliente.get('TechSupport', 'No') == 'Yes' else 0
-        
-       
-        
-        datos_procesados = [
-            contract_encoded,      
-            dependents_encoded,    
-            protection_encoded,   
-            gender_encoded,        
-            internet_encoded,     
-            monthly_charges,       
-            multilines_encoded,    
-            backup_encoded,        
-            security_encoded,      
-            paperless_encoded,    
-            partner_encoded,       
-            payment_encoded,       
-            phone_encoded,         
-            senior_citizen,       
-            movies_encoded,       
-            tv_encoded,           
-            support_encoded,      
-            total_charges,         
-            tenure                 
-        ]
-        
-        
-        return np.array(datos_procesados).reshape(1, -1)
-# Cargar el dataset
-with st.spinner("Cargando dataset..."):
-    dataset_original = cargar_dataset()
+    except Exception as e:
+        st.error(f"Error procesando datos: {e}")
+        st.error(f"Datos recibidos: {datos_cliente}")
+        return None
 
-# Limpiar los datos
-if dataset_original is not None:
-    with st.spinner("Limpiando datos..."):
-        X_limpio, y_limpio = limpiar_datos(dataset_original)
-else:
-    X_limpio, y_limpio = None, None
-
-# Cargar los modelos
+# INTERFAZ PRINCIPAL
 with st.spinner("Cargando modelos de machine learning..."):
     modelos_disponibles = cargar_modelos()
 
-
 total_modelos = sum(len(variantes) for variantes in modelos_disponibles.values())
-if dataset_original is not None or total_modelos > 0:
-    
 
+if total_modelos > 0:
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Predicción", 
-        "EDA", 
-        "Datos Limpios", 
-        "Métricas y Rendimiento", 
-        "Resoluciones"
+        "Predicción", "EDA", "Datos Limpios", "Métricas y Rendimiento", "Resoluciones"
     ])
 
-    # PESTAÑA 1: PREDICCIÓN
-
     with tab1:
+        st.subheader("Configuración del Modelo")
         
-        if total_modelos == 0:
-            st.error("❌ No hay modelos disponibles para hacer predicciones")
-            st.info("Por favor, asegúrate de que los archivos .pkl de los modelos estén en el directorio")
-        else:
-            st.subheader("Configuración del Modelo")
+        col_config1, col_config2 = st.columns(2)
+        
+        with col_config1:
+            modelos_base_disponibles = [modelo for modelo in modelos_disponibles.keys() 
+                                      if len(modelos_disponibles[modelo]) > 0]
             
-            col_config1, col_config2 = st.columns(2)
-            
-            with col_config1:
-                modelos_base_disponibles = [modelo for modelo in modelos_disponibles.keys() 
-                                          if len(modelos_disponibles[modelo]) > 0]
+            if len(modelos_base_disponibles) == 0:
+                st.error("No hay modelos base disponibles")
+                modelo_seleccionado = None
+            else:
+                modelo_seleccionado = st.selectbox(
+                    "Selecciona el Modelo:",
+                    modelos_base_disponibles,
+                )
+        
+        with col_config2:
+            if modelo_seleccionado:
+                variantes_disponibles = list(modelos_disponibles[modelo_seleccionado].keys())
                 
-                if len(modelos_base_disponibles) == 0:
-                    st.error("No hay modelos base disponibles")
-                    modelo_seleccionado = None
-                else:
-                    modelo_seleccionado = st.selectbox(
-                        "Selecciona el Modelo:",
-                        modelos_base_disponibles,
-                    )
-            
-            with col_config2:
-                if modelo_seleccionado:
-                    variantes_disponibles = list(modelos_disponibles[modelo_seleccionado].keys())
-                    
-                    opciones_features = []
-                    if '19' in variantes_disponibles:
-                        opciones_features.append("Todas las características (19)")
-                    if '7' in variantes_disponibles:
-                        opciones_features.append("Solo las 7 más importantes")
-                    
-                    if len(opciones_features) == 0:
-                        st.error("No hay variantes disponibles para este modelo")
-                        tipo_features = None
-                    else:
-                        tipo_features = st.selectbox(
-                            "Número de Características:",
-                            opciones_features,
-                            
-                        )
-                else:
+                opciones_features = []
+                if '19' in variantes_disponibles:
+                    opciones_features.append("Todas las características (19)")
+                if '7' in variantes_disponibles:
+                    opciones_features.append("Solo las 7 más importantes")
+                
+                if len(opciones_features) == 0:
+                    st.error("No hay variantes disponibles para este modelo")
                     tipo_features = None
+                else:
+                    tipo_features = st.selectbox(
+                        "Número de Características:",
+                        opciones_features,
+                    )
+            else:
+                tipo_features = None
+        
+        if tipo_features:
+            usar_7_features = "7 más importantes" in tipo_features
+            num_features_str = '7' if usar_7_features else '19'
             
-            if tipo_features:
-                usar_7_features = "7 más importantes" in tipo_features
-                num_features_str = '7' if usar_7_features else '19'
+        st.markdown("---")  
+        
+        col_formulario, col_resultado = st.columns([2, 1])
+        
+        with col_formulario:
+            st.subheader("Datos del Cliente")
+            
+            with st.form("formulario_cliente"):
+                if usar_7_features:
+                    # FORMULARIO SIMPLIFICADO - SOLO 7 CARACTERÍSTICAS
+                    st.markdown("**📊 7 Características Principales**")
+                    
+                    col_basic1, col_basic2 = st.columns(2)
+                    with col_basic1:
+                        tenure = st.number_input("Meses como Cliente (tenure)", 
+                                               min_value=0, max_value=100, value=12, step=1)
+                        MonthlyCharges = st.number_input("Cargo Mensual ($)", 
+                                                       min_value=0.0, max_value=200.0, value=50.0, step=0.1)
+                        TotalCharges = st.number_input("Cargo Total ($)", 
+                                                     min_value=0.0, max_value=10000.0, value=1000.0, step=0.1)
+                    
+                    with col_basic2:
+                        InternetService = st.selectbox("Servicio de Internet", 
+                                                     ["DSL", "Fiber optic", "No"], index=0)
+                        Contract = st.selectbox("Tipo de Contrato", 
+                                               ["Month-to-month", "One year", "Two year"], index=0)
+                        PaymentMethod = st.selectbox("Método de Pago", 
+                            ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"], index=0)
+                    
+                    PaperlessBilling = st.selectbox("Facturación Sin Papel", ["No", "Yes"], index=0)
+                    
+                    # Variables por defecto para el modo 7 características
+                    SeniorCitizen, Partner, Dependents = 0, "No", "No"
+                    PhoneService, MultipleLines = "Yes", "No"
+                    OnlineSecurity, OnlineBackup, DeviceProtection = "No", "No", "No"
+                    TechSupport, StreamingTV, StreamingMovies, gender = "No", "No", "No", "Male"
+                    
+                else:
+                    # FORMULARIO COMPLETO - TODAS LAS 19 CARACTERÍSTICAS
+                    st.markdown("**👤 Información Personal**")
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        gender = st.selectbox("Género", ["Male", "Female"], index=0)
+                        SeniorCitizen = st.selectbox("Ciudadano Mayor", [0, 1], 
+                                                   format_func=lambda x: "No" if x == 0 else "Sí", index=0)
+                        Partner = st.selectbox("Tiene Pareja", ["No", "Yes"], index=0)
+                    
+                    with col2:
+                        Dependents = st.selectbox("Tiene Dependientes", ["No", "Yes"], index=0)
+                        tenure = st.number_input("Meses como Cliente (tenure)", 
+                                               min_value=0, max_value=100, value=12, step=1)
+                    
+                    st.markdown("**📞 Servicios**")
+                    col3, col4 = st.columns(2)
+                    
+                    with col3:
+                        PhoneService = st.selectbox("Servicio Telefónico", ["Yes", "No"], index=0)
+                        MultipleLines = st.selectbox("Múltiples Líneas", ["No", "Yes"], index=0)
+                        InternetService = st.selectbox("Servicio de Internet", 
+                                                     ["DSL", "Fiber optic", "No"], index=0)
+                    
+                    with col4:
+                        OnlineSecurity = st.selectbox("Seguridad Online", ["No", "Yes"], index=0)
+                        OnlineBackup = st.selectbox("Respaldo Online", ["No", "Yes"], index=0)
+                        DeviceProtection = st.selectbox("Protección de Dispositivo", ["No", "Yes"], index=0)
+                    
+                    col5, col6 = st.columns(2)
+                    
+                    with col5:
+                        TechSupport = st.selectbox("Soporte Técnico", ["No", "Yes"], index=0)
+                        StreamingTV = st.selectbox("Streaming TV", ["No", "Yes"], index=0)
+                    
+                    with col6:
+                        StreamingMovies = st.selectbox("Streaming Películas", ["No", "Yes"], index=0)
+                    
+                    st.markdown("**💳 Contrato y Pagos**")
+                    col7, col8 = st.columns(2)
+                    
+                    with col7:
+                        Contract = st.selectbox("Tipo de Contrato", 
+                                               ["Month-to-month", "One year", "Two year"], index=0)
+                        PaperlessBilling = st.selectbox("Facturación Sin Papel", ["No", "Yes"], index=0)
+                    
+                    with col8:
+                        PaymentMethod = st.selectbox("Método de Pago", 
+                            ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"], index=0)
+                    
+                    col9, col10 = st.columns(2)
+                    
+                    with col9:
+                        MonthlyCharges = st.number_input("Cargo Mensual ($)", 
+                                                       min_value=0.0, max_value=200.0, value=50.0, step=0.1)
+                    
+                    with col10:
+                        TotalCharges = st.number_input("Cargo Total ($)", 
+                                                     min_value=0.0, max_value=10000.0, value=1000.0, step=0.1)
                 
-                    
-            st.markdown("---")  
-            
-            col_formulario, col_resultado = st.columns([2, 1])
-            
-            with col_formulario:
-                st.subheader("Datos del Cliente")
+                boton_predecir = st.form_submit_button("🔮 Realizar Predicción", type="primary")
+        
+        with col_resultado:
+            if boton_predecir and modelo_seleccionado and tipo_features:
+                st.subheader("📊 Resultado")
                 
-                with st.form("formulario_cliente"):
+                # Crear diccionario con TODOS los datos
+                datos_cliente = {
+                    'SeniorCitizen': SeniorCitizen,
+                    'tenure': tenure,
+                    'MonthlyCharges': MonthlyCharges,
+                    'TotalCharges': TotalCharges,
+                    'gender': gender,
+                    'Partner': Partner,
+                    'Dependents': Dependents,
+                    'PhoneService': PhoneService,
+                    'MultipleLines': MultipleLines,
+                    'InternetService': InternetService,
+                    'OnlineSecurity': OnlineSecurity,
+                    'OnlineBackup': OnlineBackup,
+                    'DeviceProtection': DeviceProtection,
+                    'TechSupport': TechSupport,
+                    'StreamingTV': StreamingTV,
+                    'StreamingMovies': StreamingMovies,
+                    'Contract': Contract,
+                    'PaperlessBilling': PaperlessBilling,
+                    'PaymentMethod': PaymentMethod
+                }
+                
+                # DEBUG: Mostrar datos procesados
+                if st.checkbox("🔍 Mostrar datos procesados (debug)", key="debug_datos"):
+                    st.write("**Datos del formulario:**")
+                    st.json(datos_cliente)
+                
+                try:
+                    modelo, archivo_modelo = cargar_modelo_especifico(
+                        modelo_seleccionado, num_features_str, modelos_disponibles)
                     
-                    if usar_7_features:
-                        # FORMULARIO SIMPLIFICADO - SOLO 7 CARACTERÍSTICAS
-                        
-                        st.markdown("** 7 Características Principales**")
-                    
-                        tenure = st.number_input("Tenure", min_value=0, max_value=100, value=12)
-                        InternetService = st.selectbox("InternetService", ["DSL", "Fiber optic", "No"])
-                        Contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
-                        PaperlessBilling = st.selectbox("PaperlessBilling", ["Yes", "No"])
-                        PaymentMethod = st.selectbox("PaymentMethod", 
-                            ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
-                        col_cargos1, col_cargos2 = st.columns(2)
-                        with col_cargos1:
-                            MonthlyCharges = st.number_input("MonthlyCharges ($)", min_value=0.0, value=50.0)
-                        with col_cargos2:
-                            TotalCharges = st.number_input("TotalCharges ($)", min_value=0.0, value=1000.0)
-                        
-                        SeniorCitizen = 0
-                        Partner = "No"
-                        Dependents = "No"
-                        PhoneService = "Yes"
-                        MultipleLines = "No"
-                        OnlineSecurity = "No"
-                        OnlineBackup = "No"
-                        DeviceProtection = "No"
-                        TechSupport = "No"
-                        StreamingTV = "No"
-                        StreamingMovies = "No"
-                        gender = "Male"
-
-                        
+                    if modelo is None:
+                        st.error(f"❌ No se pudo cargar el modelo {modelo_seleccionado} con {num_features_str} características")
                     else:
-                        # FORMULARIO COMPLETO - TODAS LAS 19 CARACTERÍSTICAS
+                        datos_procesados = procesar_datos_cliente(datos_cliente, usar_7_features)
                         
-                        st.markdown("** Todas las Características**")
-                        
-                        st.markdown("**👤 Información Personal**")
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            gender = st.selectbox("Género", ["Male", "Female"])
-                            SeniorCitizen = st.selectbox("SeniorCitizen", [0, 1], format_func=lambda x: "No" if x == 0 else "Sí")
-                            Partner = st.selectbox("Partner", ["No", "Yes"])
-                        
-                        with col2:
-                            Dependents = st.selectbox("Dependientes", ["No", "Yes"])
-                            tenure = st.number_input("Meses como Cliente(tenure)", min_value=0, max_value=100, value=12)
-                        
-                        
-                        st.markdown("**📞 Servicios**")
-                        col3, col4 = st.columns(2)
-                        
-                        with col3:
-                            PhoneService = st.selectbox("PhoneService", ["Yes", "No"])
-                            MultipleLines = st.selectbox("MultipleLines", ["No", "Yes"])
-                            InternetService = st.selectbox("InternetService", ["DSL", "Fiber optic", "No"])
-                        
-                        with col4:
-                            OnlineSecurity = st.selectbox("OnlineSecurity", ["No", "Yes"])
-                            OnlineBackup = st.selectbox("OnlineBackup", ["No", "Yes"])
-                            DeviceProtection = st.selectbox("DeviceProtection", ["No", "Yes"])
-                        
-                        col5, col6 = st.columns(2)
-                        
-                        with col5:
-                            TechSupport = st.selectbox("TechSupport", ["No", "Yes"])
-                            StreamingTV = st.selectbox("StreamingTV", ["No", "Yes"])
-                        
-                        with col6:
-                            StreamingMovies = st.selectbox("Streaming Movies", ["No", "Yes"])
-                        
-                        st.markdown("**💳 Contrato y Pagos**")
-                        col7, col8 = st.columns(2)
-                        
-                        with col7:
-                            Contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
-                            PaperlessBilling = st.selectbox("PaperlessBilling", ["Yes", "No"])
-                        
-                        with col8:
-                            PaymentMethod = st.selectbox("PaymentMethodo", 
-                                ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
-                        
-                        col9, col10 = st.columns(2)
-                        
-                        with col9:
-                            MonthlyCharges = st.number_input("MonthlyCharges ($)", min_value=0.0, value=50.0)
-                        
-                        with col10:
-                            TotalCharges = st.number_input("TotalCharges ($)", min_value=0.0, value=1000.0)
-                    
-                    boton_predecir = st.form_submit_button("Predicción", type="primary")
-            
-            with col_resultado:
-                if boton_predecir and modelo_seleccionado and tipo_features:
-                    st.subheader("Resultado")
-                    
-                    datos_cliente = {
-                        'SeniorCitizen': SeniorCitizen, 'tenure': tenure, 'MonthlyCharges': MonthlyCharges,
-                        'TotalCharges': TotalCharges, 'gender': gender, 'Partner': Partner,
-                        'Dependents': Dependents, 'PhoneService': PhoneService, 'MultipleLines': MultipleLines,
-                        'InternetService': InternetService, 'OnlineSecurity': OnlineSecurity, 'OnlineBackup': OnlineBackup,
-                        'DeviceProtection': DeviceProtection, 'TechSupport': TechSupport, 'StreamingTV': StreamingTV,
-                        'StreamingMovies': StreamingMovies, 'Contract': Contract, 'PaperlessBilling': PaperlessBilling,
-                        'PaymentMethod': PaymentMethod
-                    }
-                    
-                    try:
-                        modelo, archivo_modelo = cargar_modelo_especifico(modelo_seleccionado, num_features_str, modelos_disponibles)
-                        
-                        if modelo is None:
-                            st.error(f"❌ No se pudo cargar el modelo {modelo_seleccionado} con {num_features_str} características")
-                        else:
-                            datos_procesados = procesar_datos_cliente(datos_cliente, usar_7_features)
+                        if datos_procesados is not None:
+                            # DEBUG: Mostrar array procesado
+                            if st.checkbox("🔍 Ver array procesado", key="debug_array"):
+                                st.write("**Array para predicción:**")
+                                st.write(datos_procesados)
                             
                             prediccion = modelo.predict(datos_procesados)[0]
                             probabilidades = modelo.predict_proba(datos_procesados)[0]
                             
+                            # Mostrar resultado
                             if prediccion == 1:
-                                st.error("**RIESGO ALTO**")
+                                st.error("🚨 **RIESGO ALTO**")
                                 st.error("El cliente probablemente abandonará")
                             else:
-                                st.success("**RIESGO BAJO**")
+                                st.success("✅ **RIESGO BAJO**")
                                 st.success("El cliente probablemente se quedará")
                             
-                            st.write("**Probabilidades:**")
-                            st.write(f"- No Churn: {probabilidades[0]:.1%}")
-                            st.write(f"- Churn: {probabilidades[1]:.1%}")
+                            st.write("**📈 Probabilidades:**")
+                            st.write(f"- 🟢 No Churn: {probabilidades[0]:.1%}")
+                            st.write(f"- 🔴 Churn: {probabilidades[1]:.1%}")
                             
+                            # Gráfico de probabilidades
                             fig = go.Figure(data=[
                                 go.Bar(x=['No Churn', 'Churn'], 
                                       y=[probabilidades[0], probabilidades[1]],
                                       marker_color=['green', 'red'])
                             ])
-                            fig.update_layout(title="Probabilidades", height=300)
+                            fig.update_layout(title="Probabilidades de Predicción", height=300)
                             st.plotly_chart(fig, use_container_width=True)
                             
-                            st.info(f"**Modelo usado:** {modelo_seleccionado}")
-                            st.info(f"**Features usadas:** {num_features_str}")
-                        
+                            st.info(f"**🤖 Modelo:** {modelo_seleccionado}")
+                            st.info(f"**📊 Features:** {num_features_str}")
+                        else:
+                            st.error("❌ Error procesando los datos del cliente")
                             
-                    except Exception as e:
-                        st.error(f"Error en la predicción: {e}")
-                        st.error("Verifica que el modelo y las características sean compatibles")
+                except Exception as e:
+                    st.error(f"❌ Error en la predicción: {e}")
+                    st.error("Verifica que el modelo y las características sean compatibles")
+                    st.write("**Detalles del error:**")
+                    st.exception(e)
+            else:
+                if not modelo_seleccionado:
+                    st.warning("⚠️ Selecciona un modelo")
+                elif not tipo_features:
+                    st.warning("⚠️ Selecciona el tipo de características")
                 else:
-                    if not modelo_seleccionado:
-                        st.warning("⚠️ Selecciona un modelo")
-                    elif not tipo_features:
-                        st.warning("⚠️ Selecciona el tipo de características")
-                    elif modelo_seleccionado and num_features_str not in modelos_disponibles[modelo_seleccionado]:
-                        st.error(f"❌ El modelo {modelo_seleccionado} no está disponible con {num_features_str} características")
+                    st.info("👆 Completa el formulario y haz clic en 'Realizar Predicción'")
                 
 
     # ============================================================================
