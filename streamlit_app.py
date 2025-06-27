@@ -153,8 +153,8 @@ def cargar_modelos():
             '7': 'stacking_diverse_trained_7.pkl'
         },
         'MLP Classifier': {
-            '19': 'Single Classifier (MLP Classifier)_trained.pkl',
-            '7': 'Single Classifier (MLP Classifier)_trained_7.pkl'
+            '19': 'Single Classifier (XGBClassifier)_trained.pkl',
+            '7': 'Single Classifier (XGBClassifier)_trained_7.pkl'
         },
         'Voting Classifier': {
             '19': 'Voting Classifier (Soft)_trained.pkl',
