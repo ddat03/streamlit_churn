@@ -53,12 +53,12 @@ if modelo_info == "Stacking Classifier":
 
 if modelo_info == "Single Classifier":
     st.sidebar.markdown("""
-    **Multi-layer Perceptron classifier:**
-    - hidden_layer_sizes=(100, 50, 25)
-    - activation='relu'
-    - solver='adam'
-    - max_iter=1000
-    - random_state=42
+    **Light Gradient Boosting Machine:**
+    - n_estimators=300,
+    - max_depth=9,
+    - learning_rate=0.1,
+    - random_state=42,
+    - verbose=-1
     """)
 
 if modelo_info == "Voting Classifier":
@@ -153,7 +153,7 @@ def cargar_modelos():
             '19': 'stacking_diverse_trained.pkl',
             '7': 'stacking_diverse_trained_7.pkl'
         },
-        'Xgboost': {
+        'LGBMClassifier': {
             '19': 'Single Classifier (XGBClassifier)_trained.pkl',
             '7': 'Single Classifier (XGBClassifier)_trained_7.pkl'
         },
