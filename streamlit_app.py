@@ -215,13 +215,8 @@ def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
         return 0.0
         
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
-    """
-    
-    def procesar_datos_cliente(datos_cliente, usar_7_features=False):
-    """
-    Función para convertir datos del cliente usando LabelEncoders cargados desde archivo
-    CRÍTICO: El orden debe coincidir EXACTAMENTE con el entrenamiento
-    """
+   
+
     try:
         # Cargar los label encoders
         with open('label_encoders.pkl', 'rb') as f:
