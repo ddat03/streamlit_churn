@@ -568,8 +568,6 @@ if total_modelos > 0:
                     st.error("Verifica que el modelo y las características sean compatibles")
                     st.write("**Detalles del error:**")
                     st.exception(e)
-           
-                
 
     # PESTAÑA 1: EDA SIMPLE
 
@@ -651,18 +649,14 @@ if total_modelos > 0:
             df_corr['PhoneService_num'] = df_corr['PhoneService'].map({'Yes': 1, 'No': 0})
             df_corr['PaperlessBilling_num'] = df_corr['PaperlessBilling'].map({'Yes': 1, 'No': 0})
             
-            # Convertir TotalCharges a numérico
             df_corr['TotalCharges'] = pd.to_numeric(df_corr['TotalCharges'], errors='coerce').fillna(0)
             
-            # Seleccionar solo columnas numéricas para correlación
             columnas_numericas = ['SeniorCitizen', 'tenure', 'MonthlyCharges', 'TotalCharges', 
                                  'Churn_num', 'gender_num', 'Partner_num', 'Dependents_num', 
                                  'PhoneService_num', 'PaperlessBilling_num']
             
-            # Calcular matriz de correlación
             correlacion = df_corr[columnas_numericas].corr()
             
-            # Crear heatmap con plotly
             fig_heatmap = px.imshow(
                 correlacion,
                 text_auto=True,
@@ -703,7 +697,6 @@ if total_modelos > 0:
                     st.write("**Datos Limpios:**")
                     st.write("- Error en la limpieza")
             
-            # Mostrar datos limpios
             if X_limpio is not None and y_limpio is not None:
                 col_x, col_y = st.columns(2)
                 
@@ -873,12 +866,12 @@ if total_modelos > 0:
                     tp = total_correct - tn
                     fp = actual_no_churn - tn
                     fn = actual_churn - tp
-                elif f1_score > 0.55:  # Modelo moderado
+                elif f1_score > 0.55:  
                     tn = int(actual_no_churn * 0.80)
                     tp = total_correct - tn
                     fp = actual_no_churn - tn
                     fn = actual_churn - tp
-                else:  # Modelo básico
+                else:  
                     tn = int(actual_no_churn * 0.75)
                     tp = total_correct - tn
                     fp = actual_no_churn - tn
