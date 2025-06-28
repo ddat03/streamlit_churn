@@ -379,9 +379,9 @@ if total_modelos > 0:
                 
                 opciones_features = []
                 if '19' in variantes_disponibles:
-                    opciones_features.append("Todas las características")
+                    opciones_features.append("Todas las características (19)")
                 if '7' in variantes_disponibles:
-                    opciones_features.append("Solo las más importantes")
+                    opciones_features.append("Solo las 7 más importantes")
                 
                 if len(opciones_features) == 0:
                     st.error("No hay variantes disponibles para este modelo")
@@ -408,7 +408,7 @@ if total_modelos > 0:
             with st.form("formulario_cliente"):
                 if usar_7_features:
                     # FORMULARIO SIMPLIFICADO - SOLO 7 CARACTERÍSTICAS
-                    st.markdown("**Características Principales**")
+                    st.markdown("**7 Características Principales**")
                     
                     col_basic1, col_basic2 = st.columns(2)
                     with col_basic1:
