@@ -352,10 +352,10 @@ total_modelos = sum(len(variantes) for variantes in modelos_disponibles.values()
 
 if total_modelos > 0:
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "EDA", "Datos Limpios", "Prediccion", "Métricas y Rendimiento", "Resoluciones"
+        "Prediccion","EDA", "Datos Limpios", "Métricas y Rendimiento", "Resoluciones"
     ])
 
-    with tab3:
+    with tab1:
         st.subheader("Configuración del Modelo")
         
         col_config1, col_config2 = st.columns(2)
@@ -408,7 +408,7 @@ if total_modelos > 0:
             with st.form("formulario_cliente"):
                 if usar_7_features:
                     # FORMULARIO SIMPLIFICADO - SOLO 7 CARACTERÍSTICAS
-                    st.markdown("**7 Características Principales**")
+                    st.markdown("**Características Principales**")
                     
                     col_basic1, col_basic2 = st.columns(2)
                     with col_basic1:
@@ -575,7 +575,7 @@ if total_modelos > 0:
     # PESTAÑA 2: EDA SIMPLE
     # ============================================================================
 
-    with tab1:
+    with tab2:
         st.header("Exploración de Datos")
         
         if dataset_original is None:
@@ -632,7 +632,7 @@ if total_modelos > 0:
 
     # PESTAÑA 3: DATOS LIMPIOS
 
-    with tab2:
+    with tab3:
         st.header("Limpieza de Datos")
         
         if dataset_original is None:
