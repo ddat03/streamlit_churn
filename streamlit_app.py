@@ -352,10 +352,10 @@ total_modelos = sum(len(variantes) for variantes in modelos_disponibles.values()
 
 if total_modelos > 0:
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "EDA", "Prediccion", "Datos Limpios", "Métricas y Rendimiento", "Resoluciones"
+        "EDA", "Datos Limpios", "Prediccion", "Métricas y Rendimiento", "Resoluciones"
     ])
 
-    with tab2:
+    with tab3:
         st.subheader("Configuración del Modelo")
         
         col_config1, col_config2 = st.columns(2)
@@ -632,7 +632,7 @@ if total_modelos > 0:
 
     # PESTAÑA 3: DATOS LIMPIOS
 
-    with tab3:
+    with tab2:
         st.header("Limpieza de Datos")
         
         if dataset_original is None:
