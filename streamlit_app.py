@@ -379,9 +379,9 @@ if total_modelos > 0:
                 
                 opciones_features = []
                 if '19' in variantes_disponibles:
-                    opciones_features.append("Todas las características (19)")
+                    opciones_features.append("Todas las características")
                 if '7' in variantes_disponibles:
-                    opciones_features.append("Solo las 7 más importantes")
+                    opciones_features.append("Solo las más importantes")
                 
                 if len(opciones_features) == 0:
                     st.error("No hay variantes disponibles para este modelo")
