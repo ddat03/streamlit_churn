@@ -214,16 +214,19 @@ def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
     except:
         return 0.0
         
+import pickle
+import numpy as np
+import streamlit as st
+
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
-   
 
     try:
-        # Cargar los label encoders
-        with open('label_encoders.pkl', 'rb') as f:
-            label_encoders = pickle.load(f)
-        
         if usar_7_features:
-            # CONFIGURACIÓN PARA 7 CARACTERÍSTICAS
+            # Cargar label encoders para 6 características
+            with open('label_encoders_6.pkl', 'rb') as f:
+                label_encoders = pickle.load(f)
+            
+            # CONFIGURACIÓN PARA 6 CARACTERÍSTICAS
             # Mapeo de columnas categóricas con sus valores por defecto
             columnas_categoricas = {
                 'InternetService': 'DSL',
@@ -242,7 +245,7 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
                 valor = str(datos_cliente.get(columna, valor_default))
                 valores_encodados[columna] = label_encoders[columna].transform([valor])[0]
             
-            # ORDEN EXACTO DEL ENTRENAMIENTO
+            # ORDEN EXACTO DEL ENTRENAMIENTO (6 características)
             datos_procesados = [
                 tenure,                                    # 0: tenure
                 valores_encodados['InternetService'],      # 1: internet_encoded
@@ -253,7 +256,11 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
             ]
             
         else:
-            # CONFIGURACIÓN PARA 19 CARACTERÍSTICAS
+            # Cargar label encoders para 18 características
+            with open('label_encoders.pkl', 'rb') as f:
+                label_encoders = pickle.load(f)
+            
+            # CONFIGURACIÓN PARA 18 CARACTERÍSTICAS
             # Mapeo de columnas categóricas con sus valores por defecto
             columnas_categoricas = {
                 'gender': 'Male',
@@ -284,7 +291,7 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
                 valor = str(datos_cliente.get(columna, valor_default))
                 valores_encodados[columna] = label_encoders[columna].transform([valor])[0]
             
-            # ORDEN EXACTO DEL ENTRENAMIENTO (19 características)
+            # ORDEN EXACTO DEL ENTRENAMIENTO (18 características)
             datos_procesados = [
                 valores_encodados['gender'],           # 0: gender_encoded
                 senior_citizen,                        # 1: senior_citizen 
