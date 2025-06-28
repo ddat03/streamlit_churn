@@ -750,19 +750,19 @@ if total_modelos > 0:
                     'Accuracy': 0.79,
                     'AUC': 0.84,
                     'F1-Score': 0.57,
-                    'Velocidad_ms': 8.52
+                    'Tiempo_ms': 8.52
                 },
                 'LGBMClassifier': {
                     'Accuracy': 0.795,
                     'AUC': 0.835,
                     'F1-Score': 0.575,
-                    'Velocidad_ms': 15.8
+                    'Tiempo_ms': 15.8
                 },
                 'Voting Classifier': {
                     'Accuracy': 0.785,
                     'AUC': 0.835,
                     'F1-Score': 0.55,
-                    'Velocidad_ms': 8.94
+                    'Tiempo_ms': 8.94
                 }
             }
             
@@ -771,19 +771,19 @@ if total_modelos > 0:
                     'Accuracy': 0.805,
                     'AUC': 0.855,
                     'F1-Score': 0.60,
-                    'Velocidad_ms': 10.8
+                    'Tiempo_ms': 10.8
                 },
                 'LGBMClassifier': {
                     'Accuracy': 0.79,
                     'AUC': 0.83,
                     'F1-Score': 0.575,
-                    'Velocidad_ms': 17.7
+                    'Tiempo_ms': 17.7
                 },
                 'Voting Classifier': {
                     'Accuracy': 0.775,
                     'AUC': 0.837,
                     'F1-Score': 0.57,
-                    'Velocidad_ms': 9.5
+                    'Tiempo_ms': 9.5
                 }
             }
             
@@ -806,7 +806,7 @@ if total_modelos > 0:
                     'Accuracy': f"{metricas['Accuracy']:.1%}",
                     'AUC': f"{metricas['AUC']:.1%}",
                     'F1-Score': f"{metricas['F1-Score']:.1%}",
-                    'Velocidad (ms)': f"{metricas['Velocidad_ms']:.1f}",
+                    'Tiempo (ms)': f"{metricas['Tiempo_ms']:.1f}",
                     'Features': num_features
                 })
             
@@ -819,7 +819,7 @@ if total_modelos > 0:
             accuracy_vals = [metricas_actuales[m]['Accuracy'] for m in modelos]
             auc_vals = [metricas_actuales[m]['AUC'] for m in modelos]
             f1_vals = [metricas_actuales[m]['F1-Score'] for m in modelos]
-            velocidad_vals = [metricas_actuales[m]['Velocidad_ms'] for m in modelos]
+            velocidad_vals = [metricas_actuales[m]['Tiempo_ms'] for m in modelos]
             
             col_graf1, col_graf2 = st.columns(2)
             
@@ -862,7 +862,7 @@ if total_modelos > 0:
                 fig_velocidad = px.bar(
                     x=modelos,
                     y=velocidad_vals,
-                    title=f'Velocidad de Ejecución ({num_features} características)',
+                    title=f'Tiempo de Ejecución ({num_features} características)',
                     labels={'x': 'Modelos', 'y': 'Tiempo (ms)'},
                     color=velocidad_vals,
                     color_continuous_scale='Reds'
