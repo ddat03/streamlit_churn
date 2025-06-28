@@ -381,7 +381,7 @@ if total_modelos > 0:
                 if '19' in variantes_disponibles:
                     opciones_features.append("Todas las características")
                 if '7' in variantes_disponibles:
-                    opciones_features.append("Solo las 7 más importantes")
+                    opciones_features.append("Solo las más importantes")
                 
                 if len(opciones_features) == 0:
                     st.error("No hay variantes disponibles para este modelo")
@@ -395,7 +395,7 @@ if total_modelos > 0:
                 tipo_features = None
         
         if tipo_features:
-            usar_7_features = "7 más importantes" in tipo_features
+            usar_7_features = "más importantes" in tipo_features
             num_features_str = '7' if usar_7_features else '19'
             
         st.markdown("---")  
