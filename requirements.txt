@@ -7,4 +7,3 @@ plotly
 seaborn
 xgboost
 lightgbm
-pickle
