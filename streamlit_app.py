@@ -197,9 +197,7 @@ def cargar_modelo_especifico(modelo_base, num_features, modelos_disponibles):
         return None, None
         
 def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
-    """
-    Función para medir cuánto tiempo tarda el modelo en hacer predicciones
-    """
+
     try:
         tiempos = []
         
@@ -217,41 +215,31 @@ def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
         
 
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
-    """
-    Función para convertir datos del cliente usando SOLO LabelEncoder
-    CRÍTICO: El orden debe coincidir EXACTAMENTE con el entrenamiento
-    """
+
     try:
         if usar_7_features:
-            # ORDEN EXACTO DEL ENTRENAMIENTO - 7 CARACTERÍSTICAS
-            # [tenure, internet_encoded, contract_encoded, paperless_encoded, payment_encoded, monthly_charges, total_charges]
-            
-            # Convertir a tipos correctos
+
             tenure = int(float(datos_cliente.get('tenure', 0)))
             monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))            
-            # Codificar InternetService
             internet = str(datos_cliente.get('InternetService', 'DSL'))
             if internet == 'DSL':
                 internet_encoded = 0
             elif internet == 'Fiber optic':
                 internet_encoded = 1
-            else:  # 'No'
+            else:  
                 internet_encoded = 2
 
-            # Codificar Contract
             contrato = str(datos_cliente.get('Contract', 'Month-to-month'))
             if contrato == 'Month-to-month':
                 contract_encoded = 0
             elif contrato == 'One year':
                 contract_encoded = 1
-            else:  # 'Two year'
+            else:  
                 contract_encoded = 2
             
-            # Codificar PaperlessBilling
             paperless = str(datos_cliente.get('PaperlessBilling', 'No'))
             paperless_encoded = 1 if paperless == 'Yes' else 0
             
-            # Codificar PaymentMethod
             pago = str(datos_cliente.get('PaymentMethod', 'Electronic check'))
             if pago == 'Bank transfer (automatic)':
                 payment_encoded = 0
@@ -259,26 +247,23 @@ def procesar_datos_cliente(datos_cliente, usar_7_features=False):
                 payment_encoded = 1
             elif pago == 'Electronic check':
                 payment_encoded = 2
-            else:  # 'Mailed check'
+            else:  
                 payment_encoded = 3
             
-            # ORDEN EXACTO DEL ENTRENAMIENTO
             datos_procesados = [
-                tenure,              # 0: tenure
-                internet_encoded,    # 1: internet_encoded
-                contract_encoded,    # 2: contract_encoded
-                paperless_encoded,   # 3: paperless_encoded
-                payment_encoded,     # 4: payment_encoded
-                monthly_charges,     # 5: monthly_charges
+                tenure,              
+                internet_encoded,   
+                contract_encoded,    
+                paperless_encoded,   
+                payment_encoded,     
+                monthly_charges,     
             ]
             
         else:
-            # ORDEN PARA 19 CARACTERÍSTICAS (mantener el original si funciona)
             senior_citizen = int(float(datos_cliente.get('SeniorCitizen', 0)))
             tenure = int(float(datos_cliente.get('tenure', 0)))
             monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
             
-            # Codificar todas las variables categóricas
             contrato = str(datos_cliente.get('Contract', 'Month-to-month'))
             if contrato == 'Month-to-month':
                 contract_encoded = 0
@@ -367,10 +352,10 @@ total_modelos = sum(len(variantes) for variantes in modelos_disponibles.values()
 
 if total_modelos > 0:
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Predicción", "EDA", "Datos Limpios", "Métricas y Rendimiento", "Resoluciones"
+        "EDA", "Prediccion", "Datos Limpios", "Métricas y Rendimiento", "Resoluciones"
     ])
 
-    with tab1:
+    with tab2:
         st.subheader("Configuración del Modelo")
         
         col_config1, col_config2 = st.columns(2)
@@ -590,7 +575,7 @@ if total_modelos > 0:
     # PESTAÑA 2: EDA SIMPLE
     # ============================================================================
 
-    with tab2:
+    with tab1:
         st.header("Exploración de Datos")
         
         if dataset_original is None:
