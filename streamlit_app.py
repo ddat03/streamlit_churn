@@ -379,9 +379,9 @@ if total_modelos > 0:
                 
                 opciones_features = []
                 if '19' in variantes_disponibles:
-                    opciones_features.append("Todas las características (19)")
+                    opciones_features.append("Todas las características")
                 if '7' in variantes_disponibles:
-                    opciones_features.append("Solo las 7 más importantes")
+                    opciones_features.append("Solo las más importantes")
                 
                 if len(opciones_features) == 0:
                     st.error("No hay variantes disponibles para este modelo")
@@ -777,7 +777,7 @@ if total_modelos > 0:
             
             tipo_analisis = st.selectbox(
                 "Selecciona el tipo de características:",
-                ["7 características más importantes", "Todas las características (19)"]
+                ["top características más importantes", "Todas las características"]
             )
             
             usar_7_features = "7 características" in tipo_analisis
