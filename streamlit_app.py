@@ -215,103 +215,131 @@ def medir_tiempo_prediccion(modelo, datos_prueba, repeticiones=100):
     except:
         return 0.0
         
-import pickle
-import numpy as np
-import streamlit as st
 
 def procesar_datos_cliente(datos_cliente, usar_7_features=False):
-
+    """
+    Función para convertir datos del cliente usando SOLO LabelEncoder
+    CRÍTICO: El orden debe coincidir EXACTAMENTE con el entrenamiento
+    """
     try:
         if usar_7_features:
-            # Cargar label encoders para 6 características
-            with open('label_encoders_6.pkl', 'rb') as f:
-                label_encoders = pickle.load(f)
+            # ORDEN EXACTO DEL ENTRENAMIENTO - 7 CARACTERÍSTICAS
+            # [tenure, internet_encoded, contract_encoded, paperless_encoded, payment_encoded, monthly_charges, total_charges]
             
-            # CONFIGURACIÓN PARA 6 CARACTERÍSTICAS
-            # Mapeo de columnas categóricas con sus valores por defecto
-            columnas_categoricas = {
-                'InternetService': 'DSL',
-                'Contract': 'Month-to-month', 
-                'PaperlessBilling': 'No',
-                'PaymentMethod': 'Electronic check'
-            }
-            
-            # Variables numéricas
+            # Convertir a tipos correctos
             tenure = int(float(datos_cliente.get('tenure', 0)))
-            monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
+            monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))            
+            # Codificar InternetService
+            internet = str(datos_cliente.get('InternetService', 'DSL'))
+            if internet == 'DSL':
+                internet_encoded = 0
+            elif internet == 'Fiber optic':
+                internet_encoded = 1
+            else:  # 'No'
+                internet_encoded = 2
+
+            # Codificar Contract
+            contrato = str(datos_cliente.get('Contract', 'Month-to-month'))
+            if contrato == 'Month-to-month':
+                contract_encoded = 0
+            elif contrato == 'One year':
+                contract_encoded = 1
+            else:  # 'Two year'
+                contract_encoded = 2
             
-            # Aplicar label encoders a variables categóricas
-            valores_encodados = {}
-            for columna, valor_default in columnas_categoricas.items():
-                valor = str(datos_cliente.get(columna, valor_default))
-                valores_encodados[columna] = label_encoders[columna].transform([valor])[0]
+            # Codificar PaperlessBilling
+            paperless = str(datos_cliente.get('PaperlessBilling', 'No'))
+            paperless_encoded = 1 if paperless == 'Yes' else 0
             
-            # ORDEN EXACTO DEL ENTRENAMIENTO (6 características)
+            # Codificar PaymentMethod
+            pago = str(datos_cliente.get('PaymentMethod', 'Electronic check'))
+            if pago == 'Bank transfer (automatic)':
+                payment_encoded = 0
+            elif pago == 'Credit card (automatic)':
+                payment_encoded = 1
+            elif pago == 'Electronic check':
+                payment_encoded = 2
+            else:  # 'Mailed check'
+                payment_encoded = 3
+            
+            # ORDEN EXACTO DEL ENTRENAMIENTO
             datos_procesados = [
-                tenure,                                    # 0: tenure
-                valores_encodados['InternetService'],      # 1: internet_encoded
-                valores_encodados['Contract'],             # 2: contract_encoded
-                valores_encodados['PaperlessBilling'],     # 3: paperless_encoded
-                valores_encodados['PaymentMethod'],        # 4: payment_encoded
-                monthly_charges,                           # 5: monthly_charges
+                tenure,              # 0: tenure
+                internet_encoded,    # 1: internet_encoded
+                contract_encoded,    # 2: contract_encoded
+                paperless_encoded,   # 3: paperless_encoded
+                payment_encoded,     # 4: payment_encoded
+                monthly_charges,     # 5: monthly_charges
             ]
             
         else:
-            # Cargar label encoders para 18 características
-            with open('label_encoders.pkl', 'rb') as f:
-                label_encoders = pickle.load(f)
-            
-            # CONFIGURACIÓN PARA 18 CARACTERÍSTICAS
-            # Mapeo de columnas categóricas con sus valores por defecto
-            columnas_categoricas = {
-                'gender': 'Male',
-                'Partner': 'No',
-                'Dependents': 'No', 
-                'PhoneService': 'No',
-                'MultipleLines': 'No',
-                'InternetService': 'DSL',
-                'OnlineSecurity': 'No',
-                'OnlineBackup': 'No',
-                'DeviceProtection': 'No',
-                'TechSupport': 'No',
-                'StreamingTV': 'No',
-                'StreamingMovies': 'No',
-                'Contract': 'Month-to-month',
-                'PaperlessBilling': 'No',
-                'PaymentMethod': 'Electronic check'
-            }
-            
-            # Variables numéricas
+            # ORDEN PARA 19 CARACTERÍSTICAS (mantener el original si funciona)
             senior_citizen = int(float(datos_cliente.get('SeniorCitizen', 0)))
             tenure = int(float(datos_cliente.get('tenure', 0)))
             monthly_charges = float(datos_cliente.get('MonthlyCharges', 0))
             
-            # Aplicar label encoders a variables categóricas
-            valores_encodados = {}
-            for columna, valor_default in columnas_categoricas.items():
-                valor = str(datos_cliente.get(columna, valor_default))
-                valores_encodados[columna] = label_encoders[columna].transform([valor])[0]
+            # Codificar todas las variables categóricas
+            contrato = str(datos_cliente.get('Contract', 'Month-to-month'))
+            if contrato == 'Month-to-month':
+                contract_encoded = 0
+            elif contrato == 'One year':
+                contract_encoded = 1
+            else:
+                contract_encoded = 2
             
-            # ORDEN EXACTO DEL ENTRENAMIENTO (18 características)
+            dependents_encoded = 1 if str(datos_cliente.get('Dependents', 'No')) == 'Yes' else 0
+            protection_encoded = 1 if str(datos_cliente.get('DeviceProtection', 'No')) == 'Yes' else 0
+            gender_encoded = 0 if str(datos_cliente.get('gender', 'Male')) == 'Female' else 1
+            
+            internet = str(datos_cliente.get('InternetService', 'DSL'))
+            if internet == 'DSL':
+                internet_encoded = 0
+            elif internet == 'Fiber optic':
+                internet_encoded = 1
+            else:
+                internet_encoded = 2
+            
+            multilines_encoded = 1 if str(datos_cliente.get('MultipleLines', 'No')) == 'Yes' else 0
+            backup_encoded = 1 if str(datos_cliente.get('OnlineBackup', 'No')) == 'Yes' else 0
+            security_encoded = 1 if str(datos_cliente.get('OnlineSecurity', 'No')) == 'Yes' else 0
+            paperless_encoded = 1 if str(datos_cliente.get('PaperlessBilling', 'No')) == 'Yes' else 0
+            partner_encoded = 1 if str(datos_cliente.get('Partner', 'No')) == 'Yes' else 0
+            
+            pago = str(datos_cliente.get('PaymentMethod', 'Electronic check'))
+            if pago == 'Bank transfer (automatic)':
+                payment_encoded = 0
+            elif pago == 'Credit card (automatic)':
+                payment_encoded = 1
+            elif pago == 'Electronic check':
+                payment_encoded = 2
+            else:
+                payment_encoded = 3
+            
+            phone_encoded = 1 if str(datos_cliente.get('PhoneService', 'No')) == 'Yes' else 0
+            movies_encoded = 1 if str(datos_cliente.get('StreamingMovies', 'No')) == 'Yes' else 0
+            tv_encoded = 1 if str(datos_cliente.get('StreamingTV', 'No')) == 'Yes' else 0
+            support_encoded = 1 if str(datos_cliente.get('TechSupport', 'No')) == 'Yes' else 0
+            
             datos_procesados = [
-                valores_encodados['gender'],           # 0: gender_encoded
-                senior_citizen,                        # 1: senior_citizen 
-                valores_encodados['Partner'],          # 2: partner_encoded
-                valores_encodados['Dependents'],       # 3: dependents_encoded
-                tenure,                               # 4: tenure
-                valores_encodados['PhoneService'],     # 5: phone_encoded
-                valores_encodados['MultipleLines'],    # 6: multilines_encoded
-                valores_encodados['InternetService'],  # 7: internet_encoded
-                valores_encodados['OnlineSecurity'],   # 8: security_encoded
-                valores_encodados['OnlineBackup'],     # 9: backup_encoded
-                valores_encodados['DeviceProtection'], # 10: protection_encoded
-                valores_encodados['TechSupport'],      # 11: support_encoded
-                valores_encodados['StreamingTV'],      # 12: tv_encoded
-                valores_encodados['StreamingMovies'],  # 13: movies_encoded
-                valores_encodados['Contract'],         # 14: contract_encoded
-                valores_encodados['PaperlessBilling'], # 15: paperless_encoded
-                valores_encodados['PaymentMethod'],    # 16: payment_encoded
-                monthly_charges,                       # 17: monthly_charges
+                gender_encoded, 
+                senior_citizen, 
+                partner_encoded,
+                dependents_encoded, 
+                tenure,
+                phone_encoded, 
+                multilines_encoded, 
+                internet_encoded, 
+                security_encoded,
+                backup_encoded,   
+                protection_encoded, 
+                support_encoded, 
+                tv_encoded,
+                movies_encoded, 
+                contract_encoded,
+                paperless_encoded,
+                payment_encoded,
+                monthly_charges, 
+                 
             ]
         
         return np.array(datos_procesados).reshape(1, -1)
